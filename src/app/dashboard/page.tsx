@@ -3,7 +3,8 @@
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { UserDropdown } from "@/components/UserDropdown";
 import { useAuth } from "@/contexts/AuthContext";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Search, Library, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -11,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -28,7 +30,19 @@ export default function DashboardPage() {
                   BookMory
                 </span>
               </div>
-              <div className="flex items-center">
+              <div className="flex items-center space-x-4">
+                <Link href="/search">
+                  <Button variant="outline" size="sm">
+                    <Search className="h-4 w-4 mr-2" />
+                    Search Books
+                  </Button>
+                </Link>
+                <Link href="/library">
+                  <Button variant="outline" size="sm">
+                    <Library className="h-4 w-4 mr-2" />
+                    My Library
+                  </Button>
+                </Link>
                 <UserDropdown />
               </div>
             </div>
@@ -79,7 +93,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle>Quick Start</CardTitle>
@@ -124,6 +138,31 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions</CardTitle>
+                <CardDescription>Quick access to main features</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Link href="/search" className="block">
+                  <Button className="w-full" variant="outline">
+                    <Search className="h-4 w-4 mr-2" />
+                    Search Books
+                  </Button>
+                </Link>
+                <Link href="/library" className="block">
+                  <Button className="w-full" variant="outline">
+                    <Library className="h-4 w-4 mr-2" />
+                    View My Library
+                  </Button>
+                </Link>
+                <Button className="w-full" variant="outline" disabled>
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Reading Statistics
+                </Button>
               </CardContent>
             </Card>
           </div>
