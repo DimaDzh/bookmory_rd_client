@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { UserDropdown } from "@/components/UserDropdown";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,11 +8,21 @@ import { BookOpen, Search, BookOpenCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BookSearchModal from "@/components/BookSearchModal";
 import { CurrentlyReadingModal } from "@/components/CurrentlyReadingModal";
+import UserLibrary from "@/components/UserLibrary";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [readingModalOpen, setReadingModalOpen] = useState(false);
+
+  // Listen for custom events to open modals from library
+  useEffect(() => {
+    const handleOpenSearchModal = () => setSearchModalOpen(true);
+
+    window.addEventListener("openSearchModal", handleOpenSearchModal);
+    return () =>
+      window.removeEventListener("openSearchModal", handleOpenSearchModal);
+  }, []);
 
   return (
     <ProtectedRoute>
@@ -35,8 +45,8 @@ export default function DashboardPage() {
         </nav>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+          <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Welcome back, {user?.firstName || user?.username}!
             </h1>
@@ -44,11 +54,11 @@ export default function DashboardPage() {
           </div>
 
           {/* Main Action Buttons - First Line */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <Button
               onClick={() => setSearchModalOpen(true)}
               size="lg"
-              className="h-20 text-lg font-medium"
+              className="h-20 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
             >
               <Search className="h-6 w-6 mr-3" />
               Search Books
@@ -58,48 +68,16 @@ export default function DashboardPage() {
               onClick={() => setReadingModalOpen(true)}
               variant="outline"
               size="lg"
-              className="h-20 text-lg font-medium"
+              className="h-20 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
             >
               <BookOpenCheck className="h-6 w-6 mr-3" />
-              Books in Reading Status
+              Currently Reading
             </Button>
           </div>
 
-          {/* Quick Stats or Info Section */}
+          {/* My Library Section */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Quick Start Guide</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Search className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-medium mb-2">Search for Books</h3>
-                <p className="text-sm text-muted-foreground">
-                  Use our Google Books integration to find books you want to
-                  read
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <BookOpen className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-medium mb-2">Add to Library</h3>
-                <p className="text-sm text-muted-foreground">
-                  Add interesting books to your personal collection
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <BookOpenCheck className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-medium mb-2">Track Progress</h3>
-                <p className="text-sm text-muted-foreground">
-                  Monitor your reading progress and mark books as complete
-                </p>
-              </div>
-            </div>
+            <UserLibrary />
           </div>
         </div>
 
