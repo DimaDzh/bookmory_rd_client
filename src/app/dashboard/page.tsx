@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { BookOpen, Search, BookOpenCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BookSearchModal from "@/components/BookSearchModal";
-import CurrentlyReadingModal from "@/components/CurrentlyReadingModal";
+import { CurrentlyReadingModal } from "@/components/CurrentlyReadingModal";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -105,12 +105,12 @@ export default function DashboardPage() {
 
         {/* Modals */}
         <BookSearchModal
-          open={searchModalOpen}
-          onOpenChange={setSearchModalOpen}
+          isOpen={searchModalOpen}
+          onClose={() => setSearchModalOpen(false)}
         />
         <CurrentlyReadingModal
-          open={readingModalOpen}
-          onOpenChange={setReadingModalOpen}
+          isOpen={readingModalOpen}
+          onClose={() => setReadingModalOpen(false)}
         />
       </div>
     </ProtectedRoute>

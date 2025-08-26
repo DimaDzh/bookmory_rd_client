@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import { BookOpen, Clock } from "lucide-react";
 import {
@@ -12,47 +11,25 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { booksService } from "@/services/books";
+import { useBooksCurrentlyReading } from "@/hooks/useBooks";
 import { UserBook } from "@/types/books";
 
 interface CurrentlyReadingModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function CurrentlyReadingModal({
-  open,
-  onOpenChange,
+export function CurrentlyReadingModal({
+  isOpen,
+  onClose,
 }: CurrentlyReadingModalProps) {
-  const [books, setBooks] = useState<UserBook[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  const { data: libraryResponse, isLoading: loading } =
+    useBooksCurrentlyReading();
 
-  useEffect(() => {
-    const loadData = async () => {
-      if (!open) return;
-
-      setLoading(true);
-      try {
-        const response = await booksService.getUserLibrary({
-          status: "READING",
-          limit: 20,
-        });
-        setBooks(response.books);
-      } catch (error) {
-        console.error("Failed to load currently reading books:", error);
-        toast("Failed to load your currently reading books.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, [open, toast]);
+  const books = libraryResponse?.books || [];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Currently Reading</DialogTitle>
@@ -71,7 +48,7 @@ export default function CurrentlyReadingModal({
             </div>
           ) : books.length > 0 ? (
             <div className="space-y-4">
-              {books.map((userBook) => (
+              {books.map((userBook: UserBook) => (
                 <ReadingBookCard key={userBook.id} userBook={userBook} />
               ))}
             </div>
