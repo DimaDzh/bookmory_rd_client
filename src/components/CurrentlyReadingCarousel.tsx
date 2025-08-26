@@ -154,8 +154,16 @@ interface CompactReadingBookCardProps {
 function CompactReadingBookCard({ userBook }: CompactReadingBookCardProps) {
   const { book, currentPage, progressPercentage, startedAt } = userBook;
 
+  const handleCardClick = () => {
+    // You could add functionality here to open a reading detail modal or navigate to book details
+    console.log(`Clicked on book: ${book.title}`);
+  };
+
   return (
-    <Card className="hover:shadow-lg transition-all duration-200 group cursor-pointer">
+    <Card
+      className="hover:shadow-lg transition-all duration-200 group cursor-pointer hover:scale-[1.02]"
+      onClick={handleCardClick}
+    >
       <CardContent className="p-3 h-full flex flex-col">
         {/* Book Cover */}
         <div className="relative mb-3">

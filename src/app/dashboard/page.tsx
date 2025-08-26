@@ -4,16 +4,15 @@ import { useState, useEffect } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { UserDropdown } from "@/components/UserDropdown";
 import { useAuth } from "@/contexts/AuthContext";
-import { BookOpen, Search, BookOpenCheck } from "lucide-react";
+import { BookOpen, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BookSearchModal from "@/components/BookSearchModal";
-import { CurrentlyReadingModal } from "@/components/CurrentlyReadingModal";
+import { CurrentlyReadingCarousel } from "@/components/CurrentlyReadingCarousel";
 import UserLibrary from "@/components/UserLibrary";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [readingModalOpen, setReadingModalOpen] = useState(false);
 
   // Listen for custom events to open modals from library
   useEffect(() => {
@@ -53,26 +52,21 @@ export default function DashboardPage() {
             <p className="text-gray-600">Manage your personal book library</p>
           </div>
 
-          {/* Main Action Buttons - First Line */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+          {/* Main Action Button - Centered */}
+          <div className="flex justify-center">
             <Button
               onClick={() => setSearchModalOpen(true)}
               size="lg"
-              className="h-20 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
+              className="h-20 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 px-8"
             >
               <Search className="h-6 w-6 mr-3" />
               Search Books
             </Button>
+          </div>
 
-            <Button
-              onClick={() => setReadingModalOpen(true)}
-              variant="outline"
-              size="lg"
-              className="h-20 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              <BookOpenCheck className="h-6 w-6 mr-3" />
-              Currently Reading
-            </Button>
+          {/* Currently Reading Carousel */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <CurrentlyReadingCarousel />
           </div>
 
           {/* My Library Section */}
@@ -85,10 +79,6 @@ export default function DashboardPage() {
         <BookSearchModal
           isOpen={searchModalOpen}
           onClose={() => setSearchModalOpen(false)}
-        />
-        <CurrentlyReadingModal
-          isOpen={readingModalOpen}
-          onClose={() => setReadingModalOpen(false)}
         />
       </div>
     </ProtectedRoute>
