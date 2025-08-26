@@ -1,13 +1,34 @@
 "use client";
 
 import Image from "next/image";
-import { BookOpen, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  BookOpen,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Minus,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useBooksCurrentlyReading } from "@/hooks/useBooks";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  useBooksCurrentlyReading,
+  useUpdateProgress,
+  booksQueryKeys,
+} from "@/hooks/useBooks";
+import { useQueryClient } from "@tanstack/react-query";
 import { UserBook } from "@/types/books";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface CurrentlyReadingCarouselProps {
   className?: string;
@@ -19,6 +40,11 @@ export function CurrentlyReadingCarousel({
   const { data: libraryResponse, isLoading: loading } =
     useBooksCurrentlyReading();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedBookForUpdate, setSelectedBookForUpdate] =
+    useState<UserBook | null>(null);
+  const updateProgressMutation = useUpdateProgress();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const books = libraryResponse?.books || [];
   const itemsPerPage = 4; // Show 4 books at a time
@@ -42,6 +68,104 @@ export function CurrentlyReadingCarousel({
     currentIndex * itemsPerPage,
     (currentIndex + 1) * itemsPerPage
   );
+
+  const handleOpenProgressModal = (userBook: UserBook) => {
+    setSelectedBookForUpdate(userBook);
+  };
+
+  const handleCloseProgressModal = () => {
+    setSelectedBookForUpdate(null);
+  };
+
+  const handleQuickProgressUpdate = async (
+    userBook: UserBook,
+    increment: number
+  ) => {
+    const newPage = Math.max(
+      0,
+      Math.min(userBook.currentPage + increment, userBook.book.totalPages)
+    );
+
+    // Calculate new progress percentage
+    const newProgressPercentage = Math.round(
+      (newPage / userBook.book.totalPages) * 100
+    );
+
+    // Optimistic update - immediately update the UI
+    const previousData = queryClient.getQueryData(
+      booksQueryKeys.userBooks.list({ status: "READING" })
+    );
+    const previousMainData = queryClient.getQueryData(
+      booksQueryKeys.userBooks.list()
+    );
+
+    // Update Currently Reading cache
+    queryClient.setQueryData(
+      booksQueryKeys.userBooks.list({ status: "READING" }),
+      (oldData: unknown) => {
+        if (!oldData || typeof oldData !== "object" || !("books" in oldData))
+          return oldData;
+        const data = oldData as { books: UserBook[] };
+
+        return {
+          ...data,
+          books: data.books.map((book: UserBook) =>
+            book.id === userBook.id
+              ? {
+                  ...book,
+                  currentPage: newPage,
+                  progressPercentage: newProgressPercentage,
+                }
+              : book
+          ),
+        };
+      }
+    );
+
+    // Update main library cache
+    queryClient.setQueryData(
+      booksQueryKeys.userBooks.list(),
+      (oldData: unknown) => {
+        if (!oldData || typeof oldData !== "object" || !("books" in oldData))
+          return oldData;
+        const data = oldData as { books: UserBook[] };
+
+        return {
+          ...data,
+          books: data.books.map((book: UserBook) =>
+            book.id === userBook.id
+              ? {
+                  ...book,
+                  currentPage: newPage,
+                  progressPercentage: newProgressPercentage,
+                }
+              : book
+          ),
+        };
+      }
+    );
+
+    try {
+      await updateProgressMutation.mutateAsync({
+        bookId: userBook.bookId,
+        data: { currentPage: newPage },
+      });
+      toast(`Progress updated to page ${newPage}`);
+    } catch (error) {
+      // Revert optimistic updates on error
+      queryClient.setQueryData(
+        booksQueryKeys.userBooks.list({ status: "READING" }),
+        previousData
+      );
+      queryClient.setQueryData(
+        booksQueryKeys.userBooks.list(),
+        previousMainData
+      );
+
+      console.error("Failed to update progress:", error);
+      toast("Failed to update progress. Please try again.");
+    }
+  };
 
   if (loading) {
     return (
@@ -125,7 +249,12 @@ export function CurrentlyReadingCarousel({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {currentBooks.map((userBook: UserBook) => (
-          <CompactReadingBookCard key={userBook.id} userBook={userBook} />
+          <CompactReadingBookCard
+            key={userBook.id}
+            userBook={userBook}
+            onOpenProgressModal={handleOpenProgressModal}
+            onQuickUpdate={handleQuickProgressUpdate}
+          />
         ))}
       </div>
 
@@ -143,15 +272,119 @@ export function CurrentlyReadingCarousel({
           ))}
         </div>
       )}
+
+      {/* Progress Update Modal */}
+      {selectedBookForUpdate && (
+        <ProgressUpdateModal
+          book={selectedBookForUpdate}
+          onClose={handleCloseProgressModal}
+          onUpdate={async (newPage) => {
+            // Calculate new progress percentage
+            const newProgressPercentage = Math.round(
+              (newPage / selectedBookForUpdate.book.totalPages) * 100
+            );
+
+            // Optimistic update - immediately update the UI
+            const previousData = queryClient.getQueryData(
+              booksQueryKeys.userBooks.list({ status: "READING" })
+            );
+            const previousMainData = queryClient.getQueryData(
+              booksQueryKeys.userBooks.list()
+            );
+
+            // Update Currently Reading cache
+            queryClient.setQueryData(
+              booksQueryKeys.userBooks.list({ status: "READING" }),
+              (oldData: unknown) => {
+                if (
+                  !oldData ||
+                  typeof oldData !== "object" ||
+                  !("books" in oldData)
+                )
+                  return oldData;
+                const data = oldData as { books: UserBook[] };
+
+                return {
+                  ...data,
+                  books: data.books.map((book: UserBook) =>
+                    book.id === selectedBookForUpdate.id
+                      ? {
+                          ...book,
+                          currentPage: newPage,
+                          progressPercentage: newProgressPercentage,
+                        }
+                      : book
+                  ),
+                };
+              }
+            );
+
+            // Update main library cache
+            queryClient.setQueryData(
+              booksQueryKeys.userBooks.list(),
+              (oldData: unknown) => {
+                if (
+                  !oldData ||
+                  typeof oldData !== "object" ||
+                  !("books" in oldData)
+                )
+                  return oldData;
+                const data = oldData as { books: UserBook[] };
+
+                return {
+                  ...data,
+                  books: data.books.map((book: UserBook) =>
+                    book.id === selectedBookForUpdate.id
+                      ? {
+                          ...book,
+                          currentPage: newPage,
+                          progressPercentage: newProgressPercentage,
+                        }
+                      : book
+                  ),
+                };
+              }
+            );
+
+            try {
+              await updateProgressMutation.mutateAsync({
+                bookId: selectedBookForUpdate.bookId,
+                data: { currentPage: newPage },
+              });
+              toast(`Progress updated to page ${newPage}`);
+              handleCloseProgressModal();
+            } catch (error) {
+              // Revert optimistic updates on error
+              queryClient.setQueryData(
+                booksQueryKeys.userBooks.list({ status: "READING" }),
+                previousData
+              );
+              queryClient.setQueryData(
+                booksQueryKeys.userBooks.list(),
+                previousMainData
+              );
+
+              console.error("Failed to update progress:", error);
+              toast("Failed to update progress. Please try again.");
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
 
 interface CompactReadingBookCardProps {
   userBook: UserBook;
+  onOpenProgressModal: (userBook: UserBook) => void;
+  onQuickUpdate: (userBook: UserBook, increment: number) => Promise<void>;
 }
 
-function CompactReadingBookCard({ userBook }: CompactReadingBookCardProps) {
+function CompactReadingBookCard({
+  userBook,
+  onOpenProgressModal,
+  onQuickUpdate,
+}: CompactReadingBookCardProps) {
   const { book, currentPage, progressPercentage, startedAt } = userBook;
 
   const handleCardClick = () => {
@@ -206,21 +439,136 @@ function CompactReadingBookCard({ userBook }: CompactReadingBookCardProps) {
                 {currentPage}/{book.totalPages}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div
+              className="w-full bg-gray-200 rounded-full h-1.5 cursor-pointer hover:bg-gray-300 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenProgressModal(userBook);
+              }}
+            >
               <div
                 className="bg-gradient-to-r from-blue-500 to-blue-600 h-1.5 rounded-full transition-all duration-500"
                 style={{ width: `${progressPercentage}%` }}
               />
             </div>
-            {startedAt && (
-              <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>Started {new Date(startedAt).toLocaleDateString()}</span>
+
+            {/* Quick Update Buttons */}
+            <div className="flex justify-between items-center mt-2">
+              {startedAt && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>
+                    Started {new Date(startedAt).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onQuickUpdate(userBook, -1);
+                  }}
+                  disabled={currentPage <= 0}
+                >
+                  <Minus className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onQuickUpdate(userBook, 1);
+                  }}
+                  disabled={currentPage >= book.totalPages}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+interface ProgressUpdateModalProps {
+  book: UserBook;
+  onClose: () => void;
+  onUpdate: (newPage: number) => Promise<void>;
+}
+
+function ProgressUpdateModal({
+  book,
+  onClose,
+  onUpdate,
+}: ProgressUpdateModalProps) {
+  const [newPage, setNewPage] = useState(book.currentPage.toString());
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const pageNumber = parseInt(newPage) || 0;
+    const clampedPage = Math.max(0, Math.min(pageNumber, book.book.totalPages));
+
+    setIsUpdating(true);
+    try {
+      await onUpdate(clampedPage);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleClose = () => {
+    setNewPage(book.currentPage.toString());
+    onClose();
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Update Reading Progress</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="page">Current Page</Label>
+            <div className="flex gap-2">
+              <Input
+                id="page"
+                type="number"
+                min="0"
+                max={book.book.totalPages}
+                value={newPage}
+                onChange={(e) => setNewPage(e.target.value)}
+                placeholder="Enter page number"
+                className="flex-1"
+              />
+              <span className="flex items-center text-sm text-muted-foreground">
+                / {book.book.totalPages}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isUpdating} className="flex-1">
+              {isUpdating ? "Updating..." : "Update"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
