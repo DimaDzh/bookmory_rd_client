@@ -15,18 +15,55 @@ import {
   Grid3X3,
   List,
   Search,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
   useUserLibrary,
   useLibraryStats,
   useRemoveBookFromLibrary,
+  useUpdateProgress,
+  booksQueryKeys,
 } from "@/hooks/useBooks";
+import { useQueryClient } from "@tanstack/react-query";
 import { UserBook } from "@/types/books";
+import { ProgressUpdateModal } from "@/components/StatusSelector";
+
+// Status options for dropdown
+const statusOptions = {
+  WANT_TO_READ: {
+    label: "Want to Read",
+    color: "bg-gray-500",
+  },
+  READING: {
+    label: "Currently Reading",
+    color: "bg-blue-500",
+  },
+  FINISHED: {
+    label: "Finished",
+    color: "bg-green-500",
+  },
+  PAUSED: {
+    label: "Paused",
+    color: "bg-yellow-500",
+  },
+  DNF: {
+    label: "Did Not Finish",
+    color: "bg-red-500",
+  },
+};
+
+// Status colors and labels for badges
 
 const statusColors = {
   WANT_TO_READ: "bg-gray-100 text-gray-800",
@@ -48,12 +85,16 @@ export default function UserLibrary() {
   const [filter, setFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedBookForUpdate, setSelectedBookForUpdate] =
+    useState<UserBook | null>(null);
   const { toast } = useToast();
 
   // Use TanStack Query hooks
+  const queryClient = useQueryClient();
   const { data: libraryData, isLoading: booksLoading } = useUserLibrary();
   const { data: stats, isLoading: statsLoading } = useLibraryStats();
   const removeBookMutation = useRemoveBookFromLibrary();
+  const updateProgressMutation = useUpdateProgress();
 
   const books = libraryData?.books || [];
   const loading = booksLoading || statsLoading;
@@ -65,6 +106,328 @@ export default function UserLibrary() {
     } catch (error) {
       console.error("Failed to remove book:", error);
       toast("Failed to remove book. Please try again.");
+    }
+  };
+
+  const handleStatusChange = async (
+    userBook: UserBook,
+    newStatus: "WANT_TO_READ" | "READING" | "FINISHED" | "PAUSED" | "DNF"
+  ) => {
+    // Optimistic update - immediately update the UI
+    const previousData = queryClient.getQueryData(
+      booksQueryKeys.userBooks.list()
+    );
+    const previousReadingData = queryClient.getQueryData(
+      booksQueryKeys.userBooks.list({ status: "READING" })
+    );
+
+    // Optimistically update the main library cache
+    queryClient.setQueryData(
+      booksQueryKeys.userBooks.list(),
+      (oldData: unknown) => {
+        if (!oldData || typeof oldData !== "object" || !("books" in oldData))
+          return oldData;
+        const data = oldData as { books: UserBook[] };
+
+        return {
+          ...data,
+          books: data.books.map((book: UserBook) =>
+            book.id === userBook.id ? { ...book, status: newStatus } : book
+          ),
+        };
+      }
+    );
+
+    // Update Currently Reading filtered cache
+    queryClient.setQueryData(
+      booksQueryKeys.userBooks.list({ status: "READING" }),
+      (oldData: unknown) => {
+        if (!oldData || typeof oldData !== "object" || !("books" in oldData))
+          return oldData;
+        const data = oldData as { books: UserBook[] };
+
+        if (newStatus === "READING" && userBook.status !== "READING") {
+          // Adding book to currently reading
+          const updatedUserBook = { ...userBook, status: newStatus };
+          return {
+            ...data,
+            books: [...data.books, updatedUserBook],
+          };
+        } else if (newStatus !== "READING" && userBook.status === "READING") {
+          // Removing book from currently reading
+          return {
+            ...data,
+            books: data.books.filter(
+              (book: UserBook) => book.id !== userBook.id
+            ),
+          };
+        } else if (newStatus === "READING" && userBook.status === "READING") {
+          // Updating existing currently reading book
+          return {
+            ...data,
+            books: data.books.map((book: UserBook) =>
+              book.id === userBook.id ? { ...book, status: newStatus } : book
+            ),
+          };
+        }
+
+        return oldData;
+      }
+    );
+
+    // Also update stats cache optimistically
+    queryClient.setQueryData(
+      booksQueryKeys.userBooks.stats(),
+      (oldStats: unknown) => {
+        if (!oldStats || typeof oldStats !== "object") return oldStats;
+
+        const stats = { ...oldStats } as Record<string, number>;
+
+        // Decrease old status count
+        const oldStatusKey = userBook.status.toLowerCase().replace("_", "");
+        const statusKeyMap: Record<string, string> = {
+          wanttoread: "wantToRead",
+          reading: "currentlyReading",
+          finished: "finished",
+          paused: "paused",
+          dnf: "didNotFinish",
+        };
+
+        const oldKey = statusKeyMap[oldStatusKey] || oldStatusKey;
+        if (stats[oldKey] > 0) {
+          stats[oldKey] -= 1;
+        }
+
+        // Increase new status count
+        const newStatusKey = newStatus.toLowerCase().replace("_", "");
+        const newKey = statusKeyMap[newStatusKey] || newStatusKey;
+        stats[newKey] = (stats[newKey] || 0) + 1;
+
+        return stats;
+      }
+    );
+
+    try {
+      await updateProgressMutation.mutateAsync({
+        bookId: userBook.bookId,
+        data: { status: newStatus },
+      });
+      toast(`Book status updated to "${statusLabels[newStatus]}"`);
+    } catch (error) {
+      // Revert optimistic update on error
+      queryClient.setQueryData(booksQueryKeys.userBooks.list(), previousData);
+      queryClient.setQueryData(
+        booksQueryKeys.userBooks.list({ status: "READING" }),
+        previousReadingData
+      );
+      queryClient.invalidateQueries({
+        queryKey: booksQueryKeys.userBooks.stats(),
+      });
+
+      console.error("Failed to update status:", error);
+      toast("Failed to update status. Please try again.");
+    }
+  };
+
+  const handleOpenUpdateModal = (userBook: UserBook) => {
+    setSelectedBookForUpdate(userBook);
+  };
+
+  const handleSaveProgress = async (data: {
+    currentPage?: number;
+    status?: "WANT_TO_READ" | "READING" | "FINISHED" | "PAUSED" | "DNF";
+  }) => {
+    if (!selectedBookForUpdate) return;
+
+    // Optimistic update for progress
+    const previousData = queryClient.getQueryData(
+      booksQueryKeys.userBooks.list()
+    );
+    const previousReadingData = queryClient.getQueryData(
+      booksQueryKeys.userBooks.list({ status: "READING" })
+    );
+
+    // Calculate new progress percentage if currentPage is provided
+    const newProgressPercentage =
+      data.currentPage !== undefined
+        ? Math.round(
+            (data.currentPage / selectedBookForUpdate.book.totalPages) * 100
+          )
+        : undefined;
+
+    // Optimistically update the main library book data
+    queryClient.setQueryData(
+      booksQueryKeys.userBooks.list(),
+      (oldData: unknown) => {
+        if (!oldData || typeof oldData !== "object" || !("books" in oldData))
+          return oldData;
+        const libraryData = oldData as { books: UserBook[] };
+
+        return {
+          ...libraryData,
+          books: libraryData.books.map((book: UserBook) =>
+            book.id === selectedBookForUpdate.id
+              ? {
+                  ...book,
+                  ...(data.status && { status: data.status }),
+                  ...(data.currentPage !== undefined && {
+                    currentPage: data.currentPage,
+                  }),
+                  ...(newProgressPercentage !== undefined && {
+                    progressPercentage: newProgressPercentage,
+                  }),
+                }
+              : book
+          ),
+        };
+      }
+    );
+
+    // Update Currently Reading filtered cache if status is changing
+    if (data.status && data.status !== selectedBookForUpdate.status) {
+      queryClient.setQueryData(
+        booksQueryKeys.userBooks.list({ status: "READING" }),
+        (oldData: unknown) => {
+          if (!oldData || typeof oldData !== "object" || !("books" in oldData))
+            return oldData;
+          const libraryData = oldData as { books: UserBook[] };
+
+          const updatedBook = {
+            ...selectedBookForUpdate,
+            status: data.status!,
+            ...(data.currentPage !== undefined && {
+              currentPage: data.currentPage,
+            }),
+            ...(newProgressPercentage !== undefined && {
+              progressPercentage: newProgressPercentage,
+            }),
+          };
+
+          if (
+            data.status === "READING" &&
+            selectedBookForUpdate.status !== "READING"
+          ) {
+            // Adding book to currently reading
+            return {
+              ...libraryData,
+              books: [...libraryData.books, updatedBook],
+            };
+          } else if (
+            data.status !== "READING" &&
+            selectedBookForUpdate.status === "READING"
+          ) {
+            // Removing book from currently reading
+            return {
+              ...libraryData,
+              books: libraryData.books.filter(
+                (book: UserBook) => book.id !== selectedBookForUpdate.id
+              ),
+            };
+          } else if (
+            data.status === "READING" &&
+            selectedBookForUpdate.status === "READING"
+          ) {
+            // Updating existing currently reading book
+            return {
+              ...libraryData,
+              books: libraryData.books.map((book: UserBook) =>
+                book.id === selectedBookForUpdate.id ? updatedBook : book
+              ),
+            };
+          }
+
+          return oldData;
+        }
+      );
+    } else if (
+      selectedBookForUpdate.status === "READING" &&
+      data.currentPage !== undefined
+    ) {
+      // Update progress for existing currently reading book
+      queryClient.setQueryData(
+        booksQueryKeys.userBooks.list({ status: "READING" }),
+        (oldData: unknown) => {
+          if (!oldData || typeof oldData !== "object" || !("books" in oldData))
+            return oldData;
+          const libraryData = oldData as { books: UserBook[] };
+
+          return {
+            ...libraryData,
+            books: libraryData.books.map((book: UserBook) =>
+              book.id === selectedBookForUpdate.id
+                ? {
+                    ...book,
+                    ...(data.currentPage !== undefined && {
+                      currentPage: data.currentPage,
+                    }),
+                    ...(newProgressPercentage !== undefined && {
+                      progressPercentage: newProgressPercentage,
+                    }),
+                  }
+                : book
+            ),
+          };
+        }
+      );
+    }
+
+    // Update stats if status changed
+    if (data.status && data.status !== selectedBookForUpdate.status) {
+      queryClient.setQueryData(
+        booksQueryKeys.userBooks.stats(),
+        (oldStats: unknown) => {
+          if (!oldStats || typeof oldStats !== "object") return oldStats;
+
+          const stats = { ...oldStats } as Record<string, number>;
+          const statusKeyMap: Record<string, string> = {
+            wanttoread: "wantToRead",
+            reading: "currentlyReading",
+            finished: "finished",
+            paused: "paused",
+            dnf: "didNotFinish",
+          };
+
+          // Decrease old status count
+          const oldStatusKey = selectedBookForUpdate.status
+            .toLowerCase()
+            .replace("_", "");
+          const oldKey = statusKeyMap[oldStatusKey] || oldStatusKey;
+          if (stats[oldKey] > 0) {
+            stats[oldKey] -= 1;
+          }
+
+          // Increase new status count
+          const newStatusKey = data.status!.toLowerCase().replace("_", "");
+          const newKey = statusKeyMap[newStatusKey] || newStatusKey;
+          stats[newKey] = (stats[newKey] || 0) + 1;
+
+          return stats;
+        }
+      );
+    }
+
+    try {
+      await updateProgressMutation.mutateAsync({
+        bookId: selectedBookForUpdate.bookId,
+        data,
+      });
+      toast("Progress updated successfully!");
+      setSelectedBookForUpdate(null);
+    } catch (error) {
+      // Revert optimistic update on error
+      queryClient.setQueryData(booksQueryKeys.userBooks.list(), previousData);
+      queryClient.setQueryData(
+        booksQueryKeys.userBooks.list({ status: "READING" }),
+        previousReadingData
+      );
+      if (data.status) {
+        queryClient.invalidateQueries({
+          queryKey: booksQueryKeys.userBooks.stats(),
+        });
+      }
+
+      console.error("Failed to update progress:", error);
+      toast("Failed to update progress. Please try again.");
     }
   };
 
@@ -225,6 +588,8 @@ export default function UserLibrary() {
               key={userBook.id}
               userBook={userBook}
               onRemove={handleRemoveBook}
+              onStatusChange={handleStatusChange}
+              onOpenUpdateModal={handleOpenUpdateModal}
               viewMode={viewMode}
               isRemoving={removeBookMutation.isPending}
               isUpdating={false}
@@ -262,6 +627,17 @@ export default function UserLibrary() {
           </div>
         </div>
       )}
+
+      {/* Progress Update Modal */}
+      <ProgressUpdateModal
+        isOpen={!!selectedBookForUpdate}
+        onClose={() => setSelectedBookForUpdate(null)}
+        bookTitle={selectedBookForUpdate?.book.title || ""}
+        currentPage={selectedBookForUpdate?.currentPage || 0}
+        totalPages={selectedBookForUpdate?.book.totalPages || 0}
+        currentStatus={selectedBookForUpdate?.status || "WANT_TO_READ"}
+        onSave={handleSaveProgress}
+      />
     </div>
   );
 }
@@ -300,6 +676,8 @@ function EnhancedStatsCard({
 interface EnhancedBookCardProps {
   userBook: UserBook;
   onRemove: (bookId: string, title: string) => void;
+  onStatusChange: (userBook: UserBook, status: UserBook["status"]) => void;
+  onOpenUpdateModal: (userBook: UserBook) => void;
   viewMode: "grid" | "list";
   isRemoving: boolean;
   isUpdating: boolean;
@@ -308,6 +686,8 @@ interface EnhancedBookCardProps {
 function EnhancedBookCard({
   userBook,
   onRemove,
+  onStatusChange,
+  onOpenUpdateModal,
   viewMode,
   isRemoving,
   isUpdating,
@@ -383,10 +763,42 @@ function EnhancedBookCard({
 
               {/* Actions */}
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Update Progress
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Update Status
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {Object.entries(statusOptions).map(([status, option]) => (
+                      <DropdownMenuItem
+                        key={status}
+                        onClick={() =>
+                          onStatusChange(userBook, status as UserBook["status"])
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            option.color.split(" ")[0]
+                          }`}
+                        />
+                        {option.label}
+                        {status === userBook.status && (
+                          <Check className="h-4 w-4 ml-auto" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuItem
+                      onClick={() => onOpenUpdateModal(userBook)}
+                      className="border-t mt-1 pt-1"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Update Progress
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   variant="outline"
                   size="sm"
@@ -495,15 +907,43 @@ function EnhancedBookCard({
 
         {/* Action Buttons */}
         <div className="flex gap-2 mt-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            disabled={isUpdating}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Update
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                disabled={isUpdating}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Status
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {Object.entries(statusOptions).map(([status, option]) => (
+                <DropdownMenuItem
+                  key={status}
+                  onClick={() =>
+                    onStatusChange(userBook, status as UserBook["status"])
+                  }
+                  className="flex items-center gap-2"
+                >
+                  <div className={`w-2 h-2 rounded-full ${option.color}`} />
+                  {option.label}
+                  {status === userBook.status && (
+                    <Check className="h-4 w-4 ml-auto" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuItem
+                onClick={() => onOpenUpdateModal(userBook)}
+                className="border-t mt-1 pt-1"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Update Progress
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="outline"
             size="sm"

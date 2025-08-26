@@ -191,7 +191,7 @@ function SimpleBookCard({ book, onSelect }: SimpleBookCardProps) {
             {thumbnail ? (
               <Image
                 src={thumbnail}
-                alt={volumeInfo.title}
+                alt={volumeInfo.title || "image"}
                 width={120}
                 height={180}
                 className="rounded-md object-cover mx-auto"
