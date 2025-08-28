@@ -10,7 +10,6 @@ import {
   Edit,
   BookOpen,
   TrendingUp,
-  Target,
   Filter,
   Grid3X3,
   List,
@@ -534,12 +533,6 @@ export default function UserLibrary() {
             value={stats.totalPagesRead}
             icon={<TrendingUp className="h-4 w-4" />}
             color="bg-purple-500"
-          />
-          <EnhancedStatsCard
-            title="Avg Rating"
-            value={stats.averageRating ? stats.averageRating.toFixed(1) : "—"}
-            icon={<Target className="h-4 w-4" />}
-            color="bg-orange-500"
           />
         </div>
       )}

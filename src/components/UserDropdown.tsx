@@ -19,13 +19,13 @@ export function UserDropdown() {
 
   const initials =
     `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() ||
-    user.username[0].toUpperCase();
+    "U";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="cursor-pointer">
-          <AvatarImage src={user.avatar} alt={user.username} />
+          <AvatarImage alt="User avatar" />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
@@ -35,7 +35,7 @@ export function UserDropdown() {
             <p className="text-sm font-medium leading-none">
               {user.firstName && user.lastName
                 ? `${user.firstName} ${user.lastName}`
-                : user.username}
+                : user.firstName || user.lastName || "User"}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}

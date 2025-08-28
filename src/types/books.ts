@@ -43,7 +43,6 @@ export interface UserBook {
   bookId: string;
   status: "WANT_TO_READ" | "READING" | "FINISHED" | "PAUSED" | "DNF";
   currentPage: number;
-  rating?: number;
   review?: string;
   isFavorite: boolean;
   startedAt?: string;
@@ -76,7 +75,6 @@ export interface AddBookToLibrary {
 export interface UpdateProgress {
   currentPage?: number;
   status?: "WANT_TO_READ" | "READING" | "FINISHED" | "PAUSED" | "DNF";
-  rating?: number;
   review?: string;
   isFavorite?: boolean;
 }
@@ -89,7 +87,6 @@ export interface LibraryStats {
   paused: number;
   didNotFinish: number;
   favorites: number;
-  averageRating: number;
   totalPagesRead: number;
 }
 

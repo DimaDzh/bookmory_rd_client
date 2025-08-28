@@ -39,9 +39,11 @@ export function CurrentlyReadingCarousel({
 }: CurrentlyReadingCarouselProps) {
   const { data: libraryResponse, isLoading: loading } =
     useBooksCurrentlyReading();
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedBookForUpdate, setSelectedBookForUpdate] =
     useState<UserBook | null>(null);
+
   const updateProgressMutation = useUpdateProgress();
   const queryClient = useQueryClient();
   const { toast } = useToast();

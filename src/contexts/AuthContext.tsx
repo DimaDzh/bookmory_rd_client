@@ -66,8 +66,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(response.user);
       toast.success("Login successful!");
       router.push("/dashboard");
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Login failed";
+    } catch (error: unknown) {
+      const apiError = error as {
+        response?: { data?: { message?: string | string[] } };
+      };
+      const errorMessage = apiError.response?.data?.message || "Login failed";
       toast.error(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
       throw error;
     } finally {
@@ -90,9 +93,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(response.user);
       toast.success("Registration successful!");
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const apiError = error as {
+        response?: { data?: { message?: string | string[] } };
+      };
       const errorMessage =
-        error.response?.data?.message || "Registration failed";
+        apiError.response?.data?.message || "Registration failed";
       toast.error(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
       throw error;
     } finally {

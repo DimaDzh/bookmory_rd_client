@@ -1,10 +1,8 @@
 export interface User {
   id: string;
-  username: string;
   email: string;
   firstName?: string;
   lastName?: string;
-  avatar?: string;
   isActive: boolean;
   role: "USER" | "MODERATOR" | "ADMIN";
   createdAt: string;
@@ -17,7 +15,6 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  username: string;
   email: string;
   password: string;
   firstName?: string;

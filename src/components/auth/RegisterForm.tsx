@@ -20,7 +20,6 @@ import { RegisterRequest } from "@/types/auth";
 
 const registerSchema = z
   .object({
-    username: z.string().min(3, "Username must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
@@ -103,22 +102,6 @@ export function RegisterForm() {
                   </p>
                 )}
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="johndoe"
-                {...register("username")}
-                disabled={isLoading}
-              />
-              {errors.username && (
-                <p className="text-sm text-destructive">
-                  {errors.username.message}
-                </p>
-              )}
             </div>
 
             <div className="space-y-2">
