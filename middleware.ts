@@ -1,39 +1,12 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-
-const publicRoutes = ["/login", "/register"];
-const protectedRoutes = ["/dashboard"];
+import { i18nRouter } from "next-i18n-router";
+import i18nConfig from "./i18nConfig";
+import { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  const token = request.cookies.get("auth_token")?.value;
-  const isAuthenticated = !!token;
-
-  const isPublicRoute = publicRoutes.includes(pathname);
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
-
-  if (!isAuthenticated) {
-    if (isProtectedRoute || pathname === "/") {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-    return NextResponse.next();
-  }
-
-  if (isAuthenticated) {
-    if (isPublicRoute || pathname === "/") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-    return NextResponse.next();
-  }
-
-  return NextResponse.next();
+  return i18nRouter(request, i18nConfig);
 }
 
+// only applies this middleware to files in the app directory
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: "/((?!api|static|.*\\..*|_next).*)",
 };

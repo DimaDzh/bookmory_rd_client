@@ -1,0 +1,71 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "user": "User"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "description": "Sign in to your account to continue",
+      "signIn": "Sign in",
+      "signingIn": "Signing in...",
+      "emailPlaceholder": "Enter your email",
+      "passwordPlaceholder": "Enter your password",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "success": "Login successful!"
+    },
+    "register": {
+      "title": "Create an account",
+      "description": "Sign up to start building your personal library",
+      "createAccount": "Create account",
+      "creatingAccount": "Creating account...",
+      "firstNamePlaceholder": "John",
+      "lastNamePlaceholder": "Doe",
+      "emailPlaceholder": "john@example.com",
+      "passwordPlaceholder": "Enter your password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "success": "Registration successful!"
+    },
+    "logout": {
+      "success": "Logged out successfully"
+    },
+    "validation": {
+      "emailRequired": "Email is required",
+      "passwordRequired": "Password is required",
+      "invalidEmail": "Invalid email address",
+      "passwordMinLength": "Password must be at least 6 characters",
+      "passwordsDontMatch": "Passwords don't match"
+    }
+  },
+  "dashboard": {
+    "title": "BookMory",
+    "welcomeBack": "Welcome back, {name}!",
+    "subtitle": "Manage your personal book library",
+    "searchBooks": "Search Books"
+  },
+  "meta": {
+    "title": "BookMory - Your Personal Library",
+    "description": "Manage your personal book library with reading progress tracking"
+  },
+  "errors": {
+    "general": "An error occurred",
+    "authRequired": "useAuth must be used within an AuthProvider"
+  }
+}

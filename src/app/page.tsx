@@ -11,9 +11,9 @@ export default function HomePage() {
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        router.push("/dashboard");
+        router.push("/en/dashboard");
       } else {
-        router.push("/login");
+        router.push("/en/login");
       }
     }
   }, [isAuthenticated, isLoading, router]);

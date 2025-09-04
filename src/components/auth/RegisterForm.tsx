@@ -17,25 +17,31 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { RegisterRequest } from "@/types/auth";
+import { Dictionary } from "@/lib/dictionaries";
 
-const registerSchema = z
-  .object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string(),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
+interface RegisterFormProps {
+  locale: string;
+  dictionary: Dictionary;
+}
 
-type RegisterFormData = z.infer<typeof registerSchema>;
-
-export function RegisterForm() {
+export function RegisterForm({ locale, dictionary }: RegisterFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { register: registerUser } = useAuth();
+
+  const registerSchema = z
+    .object({
+      email: z.string().email(dictionary.auth.validation.invalidEmail),
+      password: z.string().min(6, dictionary.auth.validation.passwordMinLength),
+      confirmPassword: z.string(),
+      firstName: z.string().optional(),
+      lastName: z.string().optional(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: dictionary.auth.validation.passwordsDontMatch,
+      path: ["confirmPassword"],
+    });
+
+  type RegisterFormData = z.infer<typeof registerSchema>;
 
   const {
     register,
@@ -48,8 +54,10 @@ export function RegisterForm() {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, ...registerData } = data;
       await registerUser(registerData as RegisterRequest);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       // Error is handled in the AuthContext
     } finally {
@@ -62,21 +70,21 @@ export function RegisterForm() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            Create an account
+            {dictionary.auth.register.title}
           </CardTitle>
           <CardDescription className="text-center">
-            Sign up to start building your personal library
+            {dictionary.auth.register.description}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">{dictionary.common.firstName}</Label>
                 <Input
                   id="firstName"
                   type="text"
-                  placeholder="John"
+                  placeholder={dictionary.auth.register.firstNamePlaceholder}
                   {...register("firstName")}
                   disabled={isLoading}
                 />
@@ -88,11 +96,11 @@ export function RegisterForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">{dictionary.common.lastName}</Label>
                 <Input
                   id="lastName"
                   type="text"
-                  placeholder="Doe"
+                  placeholder={dictionary.auth.register.lastNamePlaceholder}
                   {...register("lastName")}
                   disabled={isLoading}
                 />
@@ -105,11 +113,11 @@ export function RegisterForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{dictionary.common.email}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="john@example.com"
+                placeholder={dictionary.auth.register.emailPlaceholder}
                 {...register("email")}
                 disabled={isLoading}
               />
@@ -121,11 +129,11 @@ export function RegisterForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{dictionary.common.password}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder={dictionary.auth.register.passwordPlaceholder}
                 {...register("password")}
                 disabled={isLoading}
               />
@@ -137,11 +145,15 @@ export function RegisterForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">
+                {dictionary.common.confirmPassword}
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="Confirm your password"
+                placeholder={
+                  dictionary.auth.register.confirmPasswordPlaceholder
+                }
                 {...register("confirmPassword")}
                 disabled={isLoading}
               />
@@ -156,18 +168,21 @@ export function RegisterForm() {
               {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creating account...
+                  {dictionary.auth.register.creatingAccount}
                 </>
               ) : (
-                "Create account"
+                dictionary.auth.register.createAccount
               )}
             </Button>
           </form>
 
           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              Sign in
+            {dictionary.auth.register.alreadyHaveAccount}{" "}
+            <Link
+              href={`/${locale}/login`}
+              className="text-primary hover:underline"
+            >
+              {dictionary.auth.register.signIn}
             </Link>
           </div>
         </CardContent>

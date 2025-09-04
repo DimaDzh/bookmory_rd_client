@@ -1,0 +1,71 @@
+{
+  "common": {
+    "loading": "Завантаження...",
+    "email": "Електронна пошта",
+    "password": "Пароль",
+    "confirmPassword": "Підтвердьте пароль",
+    "firstName": "Ім'я",
+    "lastName": "Прізвище",
+    "cancel": "Скасувати",
+    "save": "Зберегти",
+    "delete": "Видалити",
+    "edit": "Редагувати",
+    "search": "Пошук",
+    "close": "Закрити",
+    "back": "Назад",
+    "next": "Далі",
+    "previous": "Попередній",
+    "user": "Користувач"
+  },
+  "auth": {
+    "login": {
+      "title": "З поверненням",
+      "description": "Увійдіть у свій обліковий запис, щоб продовжити",
+      "signIn": "Увійти",
+      "signingIn": "Вхід...",
+      "emailPlaceholder": "Введіть вашу електронну пошту",
+      "passwordPlaceholder": "Введіть ваш пароль",
+      "noAccount": "Не маєте облікового запису?",
+      "signUp": "Зареєструватися",
+      "success": "Успішний вхід!"
+    },
+    "register": {
+      "title": "Створити обліковий запис",
+      "description": "Зареєструйтеся, щоб почати створювати свою особисту бібліотеку",
+      "createAccount": "Створити обліковий запис",
+      "creatingAccount": "Створення облікового запису...",
+      "firstNamePlaceholder": "Іван",
+      "lastNamePlaceholder": "Іваненко",
+      "emailPlaceholder": "ivan@example.com",
+      "passwordPlaceholder": "Введіть ваш пароль",
+      "confirmPasswordPlaceholder": "Підтвердьте ваш пароль",
+      "alreadyHaveAccount": "Вже маєте обліковий запис?",
+      "signIn": "Увійти",
+      "success": "Успішна реєстрація!"
+    },
+    "logout": {
+      "success": "Успішний вихід"
+    },
+    "validation": {
+      "emailRequired": "Електронна пошта є обов'язковою",
+      "passwordRequired": "Пароль є обов'язковим",
+      "invalidEmail": "Неправильна адреса електронної пошти",
+      "passwordMinLength": "Пароль повинен містити принаймні 6 символів",
+      "passwordsDontMatch": "Паролі не збігаються"
+    }
+  },
+  "dashboard": {
+    "title": "БукМорі",
+    "welcomeBack": "З поверненням, {name}!",
+    "subtitle": "Керуйте своєю особистою бібліотекою книг",
+    "searchBooks": "Пошук книг"
+  },
+  "meta": {
+    "title": "БукМорі - Ваша особиста бібліотека",
+    "description": "Керуйте своєю особистою бібліотекою книг з відстеженням прогресу читання"
+  },
+  "errors": {
+    "general": "Сталася помилка",
+    "authRequired": "useAuth повинен використовуватися всередині AuthProvider"
+  }
+}
