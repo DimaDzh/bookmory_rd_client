@@ -11,8 +11,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { Dictionary } from "@/lib/dictionaries";
 
-export function UserDropdown() {
+interface UserDropdownProps {
+  dictionary: Dictionary;
+}
+
+export function UserDropdown({ dictionary }: UserDropdownProps) {
   const { user, logout } = useAuth();
 
   if (!user) return null;
@@ -35,7 +40,7 @@ export function UserDropdown() {
             <p className="text-sm font-medium leading-none">
               {user.firstName && user.lastName
                 ? `${user.firstName} ${user.lastName}`
-                : user.firstName || user.lastName || "User"}
+                : user.firstName || user.lastName || dictionary.common.user}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
@@ -45,16 +50,16 @@ export function UserDropdown() {
         <DropdownMenuSeparator />
         <DropdownMenuItem>
           <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
+          <span>{dictionary.userDropdown.profile}</span>
         </DropdownMenuItem>
         <DropdownMenuItem>
           <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
+          <span>{dictionary.userDropdown.settings}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>{dictionary.userDropdown.logOut}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

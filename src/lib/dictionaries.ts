@@ -112,6 +112,7 @@ export type Dictionary = {
     noBooks: string;
     noBooksDescription: string;
     reading: string;
+    started: string;
     startedOn: string;
     updateProgress: string;
     currentPage: string;
@@ -119,6 +120,15 @@ export type Dictionary = {
     cancel: string;
     update: string;
     updating: string;
+    bookDetails: string;
+    readingProgress: string;
+    progress: string;
+    of: string;
+    pages: string;
+    status: string;
+    description: string;
+    published: string;
+    language: string;
   };
   libraryStats: {
     totalBooks: string;
@@ -134,6 +144,34 @@ export type Dictionary = {
   errors: {
     general: string;
     authRequired: string;
+  };
+  userDropdown: {
+    profile: string;
+    settings: string;
+    logOut: string;
+  };
+  bookSearch: {
+    searchBooksTitle: string;
+    bookDetailsTitle: string;
+    searchDescription: string;
+    bookDetailsDescription: string;
+    searchPlaceholder: string;
+    search: string;
+    searchingBooks: string;
+    noResultsTitle: string;
+    noResultsDescription: string;
+    searchPromptTitle: string;
+    searchPromptDescription: string;
+    by: string;
+    published: string;
+    pages: string;
+    language: string;
+    description: string;
+    decline: string;
+    addToLibrary: string;
+    addingToLibrary: string;
+    bookAddedSuccess: string;
+    bookAddedError: string;
   };
 };
 

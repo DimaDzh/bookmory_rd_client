@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { UserDropdown } from "@/components/UserDropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { BookOpen, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +8,8 @@ import { CurrentlyReadingCarousel } from "@/components/CurrentlyReadingCarousel"
 import UserLibrary from "@/components/UserLibrary";
 import { Dictionary } from "@/lib/dictionaries";
 import { interpolate } from "@/lib/helpers";
+import { useOpenModal } from "@/hooks/useOpenModal";
+import { UserDropdown } from "@/components/UserDropdown";
 
 interface DashboardClientProps {
   locale: string;
@@ -18,16 +18,7 @@ interface DashboardClientProps {
 
 export function DashboardClient({ dictionary }: DashboardClientProps) {
   const { user } = useAuth();
-  const [searchModalOpen, setSearchModalOpen] = useState(false);
-
-  // Listen for custom events to open modals from library
-  useEffect(() => {
-    const handleOpenSearchModal = () => setSearchModalOpen(true);
-
-    window.addEventListener("openSearchModal", handleOpenSearchModal);
-    return () =>
-      window.removeEventListener("openSearchModal", handleOpenSearchModal);
-  }, []);
+  const searchModal = useOpenModal({ eventName: "openSearchModal" });
 
   const welcomeMessage = interpolate(dictionary.dashboard.welcomeBack, {
     name: user?.firstName || dictionary.common.user,
@@ -46,7 +37,7 @@ export function DashboardClient({ dictionary }: DashboardClientProps) {
               </span>
             </div>
             <div className="flex items-center">
-              <UserDropdown />
+              <UserDropdown dictionary={dictionary} />
             </div>
           </div>
         </div>
@@ -64,7 +55,7 @@ export function DashboardClient({ dictionary }: DashboardClientProps) {
         {/* Main Action Button - Centered */}
         <div className="flex justify-center">
           <Button
-            onClick={() => setSearchModalOpen(true)}
+            onClick={searchModal.open}
             size="lg"
             className="h-20 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 px-8"
           >
@@ -86,8 +77,9 @@ export function DashboardClient({ dictionary }: DashboardClientProps) {
 
       {/* Modals */}
       <BookSearchModal
-        isOpen={searchModalOpen}
-        onClose={() => setSearchModalOpen(false)}
+        isOpen={searchModal.isOpen}
+        onClose={searchModal.close}
+        dictionary={dictionary}
       />
     </div>
   );

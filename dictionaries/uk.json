@@ -99,13 +99,23 @@
     "noBooks": "Наразі не читаєте жодної книги",
     "noBooksDescription": "Почніть читати книгу, щоб побачити її тут.",
     "reading": "Читаю",
-    "startedOn": "Розпочато {date}",
+    "started": "Розпочато",
+    "startedOn": "Розпочано {date}",
     "updateProgress": "Оновити прогрес читання",
     "currentPage": "Поточна сторінка",
     "pageProgress": "{current}/{total}",
     "cancel": "Скасувати",
     "update": "Оновити",
-    "updating": "Оновлення..."
+    "updating": "Оновлення...",
+    "bookDetails": "Деталі книги",
+    "readingProgress": "Прогрес читання",
+    "progress": "Прогрес",
+    "of": "з",
+    "pages": "сторінок",
+    "status": "Статус",
+    "description": "Опис",
+    "published": "Опубліковано",
+    "language": "Мова"
   },
   "libraryStats": {
     "totalBooks": "Всього книг",
@@ -121,5 +131,33 @@
   "errors": {
     "general": "Сталася помилка",
     "authRequired": "useAuth повинен використовуватися всередині AuthProvider"
+  },
+  "userDropdown": {
+    "profile": "Профіль",
+    "settings": "Налаштування",
+    "logOut": "Вийти"
+  },
+  "bookSearch": {
+    "searchBooksTitle": "Пошук книг",
+    "bookDetailsTitle": "Деталі книги",
+    "searchDescription": "Шукайте книги та додавайте їх до свого списку для читання",
+    "bookDetailsDescription": "Перегляньте деталі книги та підтвердьте додавання до своєї бібліотеки",
+    "searchPlaceholder": "Введіть назву книги, автора або ключове слово...",
+    "search": "Пошук",
+    "searchingBooks": "Пошук книг...",
+    "noResultsTitle": "Книги не знайдено",
+    "noResultsDescription": "Спробуйте змінити умови пошуку.",
+    "searchPromptTitle": "Пошук книг",
+    "searchPromptDescription": "Введіть назву книги, автора або ключове слово, щоб розпочати.",
+    "by": "автор",
+    "published": "Опубліковано",
+    "pages": "{count} сторінок",
+    "language": "Мова",
+    "description": "Опис",
+    "decline": "Відхилити",
+    "addToLibrary": "Додати до бібліотеки",
+    "addingToLibrary": "Додавання до бібліотеки...",
+    "bookAddedSuccess": "Книгу додано! \"{title}\" було додано до вашої бібліотеки.",
+    "bookAddedError": "Помилка: Не вдалося додати книгу до бібліотеки. Спробуйте ще раз."
   }
 }

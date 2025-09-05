@@ -99,13 +99,23 @@
     "noBooks": "No books currently reading",
     "noBooksDescription": "Start reading a book to see it here.",
     "reading": "Reading",
+    "started": "Started",
     "startedOn": "Started {date}",
     "updateProgress": "Update Reading Progress",
     "currentPage": "Current Page",
     "pageProgress": "{current}/{total}",
     "cancel": "Cancel",
     "update": "Update",
-    "updating": "Updating..."
+    "updating": "Updating...",
+    "bookDetails": "Book Details",
+    "readingProgress": "Reading Progress",
+    "progress": "Progress",
+    "of": "of",
+    "pages": "pages",
+    "status": "Status",
+    "description": "Description",
+    "published": "Published",
+    "language": "Language"
   },
   "libraryStats": {
     "totalBooks": "Total Books",
@@ -121,5 +131,33 @@
   "errors": {
     "general": "An error occurred",
     "authRequired": "useAuth must be used within an AuthProvider"
+  },
+  "userDropdown": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "logOut": "Log out"
+  },
+  "bookSearch": {
+    "searchBooksTitle": "Search Books",
+    "bookDetailsTitle": "Book Details",
+    "searchDescription": "Search for books and add them to your reading list",
+    "bookDetailsDescription": "Review book details and confirm to add to your library",
+    "searchPlaceholder": "Enter book title, author, or keyword...",
+    "search": "Search",
+    "searchingBooks": "Searching books...",
+    "noResultsTitle": "No books found",
+    "noResultsDescription": "Try adjusting your search terms.",
+    "searchPromptTitle": "Search for books",
+    "searchPromptDescription": "Enter a book title, author, or keyword to get started.",
+    "by": "by",
+    "published": "Published",
+    "pages": "{count} pages",
+    "language": "Language",
+    "description": "Description",
+    "decline": "Decline",
+    "addToLibrary": "Add to Library",
+    "addingToLibrary": "Adding to Library...",
+    "bookAddedSuccess": "Book added! \"{title}\" has been added to your library.",
+    "bookAddedError": "Error: Failed to add book to library. Please try again."
   }
 }
