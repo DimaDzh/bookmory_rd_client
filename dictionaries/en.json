@@ -142,6 +142,12 @@
     "en": "English",
     "uk": "Українська"
   },
+  "themeSelector": {
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "bookSearch": {
     "searchBooksTitle": "Search Books",
     "bookDetailsTitle": "Book Details",

@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Dictionary } from "@/lib/dictionaries";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { ThemeSelector } from "@/components/ThemeSelector";
 
 interface UserDropdownProps {
   dictionary: Dictionary;
@@ -30,6 +31,7 @@ export function UserDropdown({ dictionary, locale }: UserDropdownProps) {
 
   return (
     <div className="flex items-center gap-2">
+      <ThemeSelector dictionary={dictionary} variant="minimal" size="sm" />
       <LanguageSelector
         currentLocale={locale}
         dictionary={dictionary}

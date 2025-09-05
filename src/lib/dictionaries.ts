@@ -155,6 +155,12 @@ export type Dictionary = {
     en: string;
     uk: string;
   };
+  themeSelector: {
+    theme: string;
+    light: string;
+    dark: string;
+    system: string;
+  };
   bookSearch: {
     searchBooksTitle: string;
     bookDetailsTitle: string;
