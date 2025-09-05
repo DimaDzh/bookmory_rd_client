@@ -33,7 +33,7 @@ function CurrentlyReadingContent() {
   }
 
   return (
-    <div>
+    <section>
       <CarouselHeader />
       <BooksGrid />
       <CarouselPagination />
@@ -43,7 +43,7 @@ function CurrentlyReadingContent() {
         open={!!selectedBookForDetails}
         onClose={handleCloseDetailsModal}
       />
-    </div>
+    </section>
   );
 }
 

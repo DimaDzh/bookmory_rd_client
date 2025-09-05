@@ -31,7 +31,6 @@ export function ReadingBookCard({ userBook }: ReadingBookCardProps) {
       onClick={handleCardClick}
     >
       <CardContent className="p-3 h-full flex flex-col">
-        {/* Book Cover */}
         <div className="relative mb-3">
           {book.coverUrl ? (
             <Image
@@ -57,7 +56,7 @@ export function ReadingBookCard({ userBook }: ReadingBookCardProps) {
 
         {/* Book Info */}
         <div className="flex-1 flex flex-col">
-          <h4 className="font-medium text-sm line-clamp-2 mb-1 group-hover:text-primary transition-colors">
+          <h4 className="font-semibold text-sm line-clamp-2 mb-1 group-hover:text-primary transition-colors">
             {book.title}
           </h4>
           <p className="text-xs text-muted-foreground mb-2 line-clamp-1">
@@ -100,7 +99,7 @@ export function ReadingBookCard({ userBook }: ReadingBookCardProps) {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-6 w-6 p-0"
+                  className="h-6 w-6 p-0 lg:cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleQuickProgressUpdate(userBook, -1);
@@ -112,14 +111,14 @@ export function ReadingBookCard({ userBook }: ReadingBookCardProps) {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-6 w-6 p-0"
+                  className="h-6 w-6 p-0 lg:cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleQuickProgressUpdate(userBook, 1);
                   }}
                   disabled={currentPage >= book.totalPages}
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-3 w-3 " />
                 </Button>
               </div>
             </div>

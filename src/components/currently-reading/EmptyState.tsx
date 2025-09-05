@@ -8,7 +8,7 @@ export function EmptyState() {
   const { dictionary } = useCurrentlyReading();
 
   return (
-    <div>
+    <>
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-1">
           {dictionary ? dictionary.currentlyReading.title : "Currently Reading"}
@@ -34,6 +34,6 @@ export function EmptyState() {
           </p>
         </div>
       </Card>
-    </div>
+    </>
   );
 }

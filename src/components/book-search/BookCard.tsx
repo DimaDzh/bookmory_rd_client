@@ -23,7 +23,6 @@ export function BookCard({ book }: BookCardProps) {
     >
       <CardContent className="p-4">
         <div className="text-center">
-          {/* Book Cover */}
           <div className="mb-3">
             {thumbnail ? (
               <Image
@@ -41,12 +40,9 @@ export function BookCard({ book }: BookCardProps) {
             )}
           </div>
 
-          {/* Book Title */}
           <h3 className="font-semibold text-sm leading-tight line-clamp-2 mb-2">
             {volumeInfo.title}
           </h3>
-
-          {/* Author */}
           {volumeInfo.authors && volumeInfo.authors[0] && (
             <p className="text-xs text-muted-foreground line-clamp-1">
               {dictionary.bookSearch.by} {volumeInfo.authors[0]}

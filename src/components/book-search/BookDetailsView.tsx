@@ -20,9 +20,8 @@ export function BookDetailsView({ book }: BookDetailsViewProps) {
     volumeInfo.imageLinks?.thumbnail || volumeInfo.imageLinks?.smallThumbnail;
 
   return (
-    <div className="space-y-6">
+    <section className="space-y-6">
       <div className="flex gap-6">
-        {/* Book Cover */}
         <div className="flex-shrink-0">
           {thumbnail ? (
             <Image
@@ -40,7 +39,6 @@ export function BookDetailsView({ book }: BookDetailsViewProps) {
           )}
         </div>
 
-        {/* Book Information */}
         <div className="flex-1 space-y-4">
           <div>
             <h2 className="text-2xl font-bold mb-2">{volumeInfo.title}</h2>
@@ -50,8 +48,6 @@ export function BookDetailsView({ book }: BookDetailsViewProps) {
               </p>
             )}
           </div>
-
-          {/* Book Metadata */}
           <div className="flex flex-wrap gap-2">
             {volumeInfo.publishedDate && (
               <Badge variant="secondary">
@@ -79,8 +75,6 @@ export function BookDetailsView({ book }: BookDetailsViewProps) {
               </Badge>
             )}
           </div>
-
-          {/* Description */}
           {volumeInfo.description && (
             <div>
               <h3 className="font-semibold mb-2">
@@ -93,8 +87,6 @@ export function BookDetailsView({ book }: BookDetailsViewProps) {
           )}
         </div>
       </div>
-
-      {/* Action Buttons */}
       <div className="flex gap-4 justify-end pt-4 border-t">
         <Button variant="outline" onClick={handleDecline} disabled={isAdding}>
           {dictionary.bookSearch.decline}
@@ -113,6 +105,6 @@ export function BookDetailsView({ book }: BookDetailsViewProps) {
           )}
         </Button>
       </div>
-    </div>
+    </section>
   );
 }

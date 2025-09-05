@@ -46,7 +46,6 @@ export function BookDetailsModal({
 
         <div className="space-y-6">
           <div className="flex gap-6">
-            {/* Book Cover */}
             <div className="flex-shrink-0">
               {book.coverUrl ? (
                 <Image
@@ -64,7 +63,6 @@ export function BookDetailsModal({
               )}
             </div>
 
-            {/* Book Information */}
             <div className="flex-1 space-y-4">
               <div>
                 <h2 className="text-2xl font-bold mb-2">{book.title}</h2>
@@ -75,8 +73,6 @@ export function BookDetailsModal({
                   </p>
                 )}
               </div>
-
-              {/* Book Metadata */}
               <div className="flex flex-wrap gap-2">
                 {book.publishedDate && (
                   <Badge
@@ -139,7 +135,6 @@ export function BookDetailsModal({
                 </div>
               </div>
 
-              {/* Status */}
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">
                   {dictionary?.currentlyReading.status || "Status"}:
@@ -156,7 +151,6 @@ export function BookDetailsModal({
             </div>
           </div>
 
-          {/* Description */}
           {book.description && (
             <>
               <div className="border-t pt-4">
@@ -169,8 +163,6 @@ export function BookDetailsModal({
               </div>
             </>
           )}
-
-          {/* Action Buttons */}
           <div className="flex gap-4 justify-end pt-4 border-t">
             <Button variant="outline" onClick={onClose}>
               {dictionary?.common.close || "Close"}

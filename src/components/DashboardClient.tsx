@@ -26,7 +26,6 @@ export function DashboardClient({ dictionary }: DashboardClientProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -43,8 +42,7 @@ export function DashboardClient({ dictionary }: DashboardClientProps) {
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {welcomeMessage}
@@ -52,7 +50,6 @@ export function DashboardClient({ dictionary }: DashboardClientProps) {
           <p className="text-gray-600">{dictionary.dashboard.subtitle}</p>
         </div>
 
-        {/* Main Action Button - Centered */}
         <div className="flex justify-center">
           <Button
             onClick={searchModal.open}
@@ -64,18 +61,15 @@ export function DashboardClient({ dictionary }: DashboardClientProps) {
           </Button>
         </div>
 
-        {/* Currently Reading Carousel */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <CurrentlyReadingCarousel dictionary={dictionary} />
         </div>
 
-        {/* My Library Section */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <UserLibrary dictionary={dictionary} />
         </div>
-      </div>
+      </main>
 
-      {/* Modals */}
       <BookSearchModal
         isOpen={searchModal.isOpen}
         onClose={searchModal.close}
