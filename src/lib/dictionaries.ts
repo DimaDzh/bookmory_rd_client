@@ -73,6 +73,60 @@ export type Dictionary = {
     subtitle: string;
     searchBooks: string;
   };
+  library: {
+    title: string;
+    subtitle: string;
+    loading: string;
+    loadingDescription: string;
+    searchPlaceholder: string;
+    bookCount: string;
+    filterByStatus: string;
+    allBooks: string;
+    noBooks: string;
+    noBooksDescription: string;
+    noFilterResults: string;
+    noSearchResults: string;
+    adjustFilters: string;
+    removeSuccess: string;
+    removeFailed: string;
+    progressUpdated: string;
+    progressFailed: string;
+    statusUpdated: string;
+    statusFailed: string;
+    updateSuccess: string;
+    updateFailed: string;
+    updateStatus: string;
+    status: string;
+  };
+  readingStatus: {
+    wantToRead: string;
+    reading: string;
+    finished: string;
+    paused: string;
+    dnf: string;
+  };
+  currentlyReading: {
+    title: string;
+    subtitle: string;
+    booksInProgress: string;
+    noBooks: string;
+    noBooksDescription: string;
+    reading: string;
+    startedOn: string;
+    updateProgress: string;
+    currentPage: string;
+    pageProgress: string;
+    cancel: string;
+    update: string;
+    updating: string;
+  };
+  libraryStats: {
+    totalBooks: string;
+    reading: string;
+    finished: string;
+    favorites: string;
+    pagesRead: string;
+  };
   meta: {
     title: string;
     description: string;

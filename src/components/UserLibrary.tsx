@@ -37,30 +37,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { UserBook } from "@/types/books";
 import { ProgressUpdateModal } from "@/components/StatusSelector";
-
-// Status options for dropdown
-const statusOptions = {
-  WANT_TO_READ: {
-    label: "Want to Read",
-    color: "bg-gray-500",
-  },
-  READING: {
-    label: "Currently Reading",
-    color: "bg-blue-500",
-  },
-  FINISHED: {
-    label: "Finished",
-    color: "bg-green-500",
-  },
-  PAUSED: {
-    label: "Paused",
-    color: "bg-yellow-500",
-  },
-  DNF: {
-    label: "Did Not Finish",
-    color: "bg-red-500",
-  },
-};
+import { Dictionary } from "@/lib/dictionaries";
 
 // Status colors and labels for badges
 
@@ -80,13 +57,42 @@ const statusLabels = {
   DNF: "Did Not Finish",
 };
 
-export default function UserLibrary() {
+interface UserLibraryProps {
+  dictionary?: Dictionary;
+}
+
+export default function UserLibrary({ dictionary }: UserLibraryProps) {
   const [filter, setFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedBookForUpdate, setSelectedBookForUpdate] =
     useState<UserBook | null>(null);
   const { toast } = useToast();
+
+  // Helper function to interpolate strings
+  const interpolate = (
+    template: string,
+    values: Record<string, string | number>
+  ) => {
+    return template.replace(/\{(\w+)\}/g, (match, key) => {
+      return values[key] !== undefined ? String(values[key]) : match;
+    });
+  };
+
+  // Get localized status labels
+  const getStatusLabels = () => {
+    if (!dictionary) return statusLabels;
+
+    return {
+      WANT_TO_READ: dictionary.readingStatus.wantToRead,
+      READING: dictionary.readingStatus.reading,
+      FINISHED: dictionary.readingStatus.finished,
+      PAUSED: dictionary.readingStatus.paused,
+      DNF: dictionary.readingStatus.dnf,
+    };
+  };
+
+  const localizedStatusLabels = getStatusLabels();
 
   // Use TanStack Query hooks
   const queryClient = useQueryClient();
@@ -101,10 +107,16 @@ export default function UserLibrary() {
   const handleRemoveBook = async (bookId: string, title: string) => {
     try {
       await removeBookMutation.mutateAsync(bookId);
-      toast(`"${title}" has been removed from your library.`);
+      const message = dictionary
+        ? interpolate(dictionary.library.removeSuccess, { title })
+        : `"${title}" has been removed from your library.`;
+      toast(message);
     } catch (error) {
       console.error("Failed to remove book:", error);
-      toast("Failed to remove book. Please try again.");
+      const errorMessage = dictionary
+        ? dictionary.library.removeFailed
+        : "Failed to remove book. Please try again.";
+      toast(errorMessage);
     }
   };
 
@@ -211,7 +223,12 @@ export default function UserLibrary() {
         bookId: userBook.bookId,
         data: { status: newStatus },
       });
-      toast(`Book status updated to "${statusLabels[newStatus]}"`);
+      const message = dictionary
+        ? interpolate(dictionary.library.statusUpdated, {
+            status: localizedStatusLabels[newStatus],
+          })
+        : `Book status updated to "${statusLabels[newStatus]}"`;
+      toast(message);
     } catch (error) {
       // Revert optimistic update on error
       queryClient.setQueryData(booksQueryKeys.userBooks.list(), previousData);
@@ -224,7 +241,10 @@ export default function UserLibrary() {
       });
 
       console.error("Failed to update status:", error);
-      toast("Failed to update status. Please try again.");
+      const errorMessage = dictionary
+        ? dictionary.library.statusFailed
+        : "Failed to update status. Please try again.";
+      toast(errorMessage);
     }
   };
 
@@ -410,7 +430,10 @@ export default function UserLibrary() {
         bookId: selectedBookForUpdate.bookId,
         data,
       });
-      toast("Progress updated successfully!");
+      const message = dictionary
+        ? dictionary.library.updateSuccess
+        : "Progress updated successfully!";
+      toast(message);
       setSelectedBookForUpdate(null);
     } catch (error) {
       // Revert optimistic update on error
@@ -426,7 +449,10 @@ export default function UserLibrary() {
       }
 
       console.error("Failed to update progress:", error);
-      toast("Failed to update progress. Please try again.");
+      const errorMessage = dictionary
+        ? dictionary.library.updateFailed
+        : "Failed to update progress. Please try again.";
+      toast(errorMessage);
     }
   };
 
@@ -445,9 +471,13 @@ export default function UserLibrary() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">My Library</h2>
+            <h2 className="text-2xl font-bold tracking-tight">
+              {dictionary ? dictionary.library.title : "My Library"}
+            </h2>
             <p className="text-muted-foreground">
-              Manage your personal book collection
+              {dictionary
+                ? dictionary.library.subtitle
+                : "Manage your personal book collection"}
             </p>
           </div>
         </div>
@@ -455,9 +485,15 @@ export default function UserLibrary() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <BookOpen className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-            <p className="text-lg font-medium">Loading your library...</p>
+            <p className="text-lg font-medium">
+              {dictionary
+                ? dictionary.library.loading
+                : "Loading your library..."}
+            </p>
             <p className="text-sm text-muted-foreground">
-              Please wait while we fetch your books
+              {dictionary
+                ? dictionary.library.loadingDescription
+                : "Please wait while we fetch your books"}
             </p>
           </div>
         </div>
@@ -470,10 +506,17 @@ export default function UserLibrary() {
       {/* Header with Title and Search */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">My Library</h2>
+          <h2 className="text-2xl font-bold tracking-tight">
+            {dictionary ? dictionary.library.title : "My Library"}
+          </h2>
           <p className="text-muted-foreground">
-            {books.length} {books.length === 1 ? "book" : "books"} in your
-            collection
+            {dictionary
+              ? interpolate(dictionary.library.bookCount, {
+                  count: books.length,
+                })
+              : `${books.length} ${
+                  books.length === 1 ? "book" : "books"
+                } in your collection`}
           </p>
         </div>
 
@@ -481,7 +524,11 @@ export default function UserLibrary() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search books..."
+              placeholder={
+                dictionary
+                  ? dictionary.library.searchPlaceholder
+                  : "Search books..."
+              }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 w-64"
@@ -505,31 +552,35 @@ export default function UserLibrary() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           <EnhancedStatsCard
-            title="Total Books"
+            title={
+              dictionary ? dictionary.libraryStats.totalBooks : "Total Books"
+            }
             value={stats.totalBooks}
             icon={<Book className="h-4 w-4" />}
             color="bg-blue-500"
           />
           <EnhancedStatsCard
-            title="Reading"
+            title={dictionary ? dictionary.libraryStats.reading : "Reading"}
             value={stats.currentlyReading}
             icon={<BookOpen className="h-4 w-4" />}
             color="bg-green-500"
           />
           <EnhancedStatsCard
-            title="Finished"
+            title={dictionary ? dictionary.libraryStats.finished : "Finished"}
             value={stats.finished}
             icon={<Star className="h-4 w-4" />}
             color="bg-yellow-500"
           />
           <EnhancedStatsCard
-            title="Favorites"
+            title={dictionary ? dictionary.libraryStats.favorites : "Favorites"}
             value={stats.favorites}
             icon={<Heart className="h-4 w-4" />}
             color="bg-red-500"
           />
           <EnhancedStatsCard
-            title="Pages Read"
+            title={
+              dictionary ? dictionary.libraryStats.pagesRead : "Pages Read"
+            }
             value={stats.totalPagesRead}
             icon={<TrendingUp className="h-4 w-4" />}
             color="bg-purple-500"
@@ -541,7 +592,7 @@ export default function UserLibrary() {
       <div className="flex items-center gap-2 pb-4 border-b">
         <Filter className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm font-medium text-muted-foreground mr-2">
-          Filter by status:
+          {dictionary ? dictionary.library.filterByStatus : "Filter by status:"}
         </span>
         <div className="flex gap-2 flex-wrap">
           <Button
@@ -549,9 +600,13 @@ export default function UserLibrary() {
             size="sm"
             onClick={() => setFilter("")}
           >
-            All Books ({books.length})
+            {dictionary
+              ? interpolate(dictionary.library.allBooks, {
+                  count: books.length,
+                })
+              : `All Books (${books.length})`}
           </Button>
-          {Object.entries(statusLabels).map(([status, label]) => {
+          {Object.entries(localizedStatusLabels).map(([status, label]) => {
             const count = books.filter((book) => book.status === status).length;
             return (
               <Button
@@ -586,6 +641,8 @@ export default function UserLibrary() {
               viewMode={viewMode}
               isRemoving={removeBookMutation.isPending}
               isUpdating={false}
+              dictionary={dictionary}
+              localizedStatusLabels={localizedStatusLabels}
             />
           ))}
         </div>
@@ -595,16 +652,33 @@ export default function UserLibrary() {
             <BookOpen className="h-16 w-16 mx-auto mb-6 text-muted-foreground" />
             <h3 className="text-lg font-semibold mb-2">
               {filter
-                ? `No books found with status "${
-                    statusLabels[filter as keyof typeof statusLabels]
-                  }"`
+                ? dictionary
+                  ? interpolate(dictionary.library.noFilterResults, {
+                      status:
+                        localizedStatusLabels[
+                          filter as keyof typeof localizedStatusLabels
+                        ],
+                    })
+                  : `No books found with status "${
+                      statusLabels[filter as keyof typeof statusLabels]
+                    }"`
                 : searchQuery
-                ? `No books found for "${searchQuery}"`
+                ? dictionary
+                  ? interpolate(dictionary.library.noSearchResults, {
+                      query: searchQuery,
+                    })
+                  : `No books found for "${searchQuery}"`
+                : dictionary
+                ? dictionary.library.noBooks
                 : "Your library is empty"}
             </h3>
             <p className="text-muted-foreground mb-6">
               {filter || searchQuery
-                ? "Try adjusting your filters or search terms."
+                ? dictionary
+                  ? dictionary.library.adjustFilters
+                  : "Try adjusting your filters or search terms."
+                : dictionary
+                ? dictionary.library.noBooksDescription
                 : "Start by searching for books to add to your collection."}
             </p>
             {!filter && !searchQuery && (
@@ -614,7 +688,7 @@ export default function UserLibrary() {
                 }
               >
                 <Search className="h-4 w-4 mr-2" />
-                Search Books
+                {dictionary ? dictionary.dashboard.searchBooks : "Search Books"}
               </Button>
             )}
           </div>
@@ -674,6 +748,8 @@ interface EnhancedBookCardProps {
   viewMode: "grid" | "list";
   isRemoving: boolean;
   isUpdating: boolean;
+  dictionary?: Dictionary;
+  localizedStatusLabels?: Record<string, string>;
 }
 
 function EnhancedBookCard({
@@ -684,9 +760,37 @@ function EnhancedBookCard({
   viewMode,
   isRemoving,
   isUpdating,
+  dictionary,
+  localizedStatusLabels,
 }: EnhancedBookCardProps) {
   const { book, status, currentPage, progressPercentage, isFavorite } =
     userBook;
+
+  const statusLabelsToUse = localizedStatusLabels || statusLabels;
+
+  // Create localized status options
+  const localizedStatusOptions = {
+    WANT_TO_READ: {
+      label: statusLabelsToUse.WANT_TO_READ,
+      color: "bg-gray-500",
+    },
+    READING: {
+      label: statusLabelsToUse.READING,
+      color: "bg-blue-500",
+    },
+    FINISHED: {
+      label: statusLabelsToUse.FINISHED,
+      color: "bg-green-500",
+    },
+    PAUSED: {
+      label: statusLabelsToUse.PAUSED,
+      color: "bg-yellow-500",
+    },
+    DNF: {
+      label: statusLabelsToUse.DNF,
+      color: "bg-red-500",
+    },
+  };
 
   if (viewMode === "list") {
     return (
@@ -727,7 +831,7 @@ function EnhancedBookCard({
 
               <div className="flex flex-wrap gap-2 mb-3">
                 <Badge variant="secondary" className={statusColors[status]}>
-                  {statusLabels[status]}
+                  {statusLabelsToUse[status]}
                 </Badge>
                 <Badge variant="outline">{book.totalPages} pages</Badge>
                 {book.genres && book.genres[0] && (
@@ -760,35 +864,44 @@ function EnhancedBookCard({
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="flex-1">
                       <Edit className="h-4 w-4 mr-2" />
-                      Update Status
+                      {dictionary
+                        ? dictionary.library.updateStatus
+                        : "Update Status"}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
-                    {Object.entries(statusOptions).map(([status, option]) => (
-                      <DropdownMenuItem
-                        key={status}
-                        onClick={() =>
-                          onStatusChange(userBook, status as UserBook["status"])
-                        }
-                        className="flex items-center gap-2"
-                      >
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            option.color.split(" ")[0]
-                          }`}
-                        />
-                        {option.label}
-                        {status === userBook.status && (
-                          <Check className="h-4 w-4 ml-auto" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
+                    {Object.entries(localizedStatusOptions).map(
+                      ([status, option]) => (
+                        <DropdownMenuItem
+                          key={status}
+                          onClick={() =>
+                            onStatusChange(
+                              userBook,
+                              status as UserBook["status"]
+                            )
+                          }
+                          className="flex items-center gap-2"
+                        >
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              option.color.split(" ")[0]
+                            }`}
+                          />
+                          {option.label}
+                          {status === userBook.status && (
+                            <Check className="h-4 w-4 ml-auto" />
+                          )}
+                        </DropdownMenuItem>
+                      )
+                    )}
                     <DropdownMenuItem
                       onClick={() => onOpenUpdateModal(userBook)}
                       className="border-t mt-1 pt-1"
                     >
                       <Edit className="h-4 w-4 mr-2" />
-                      Update Progress
+                      {dictionary
+                        ? dictionary.currentlyReading.updateProgress
+                        : "Update Progress"}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -850,7 +963,7 @@ function EnhancedBookCard({
               variant="secondary"
               className={`${statusColors[status]} font-medium`}
             >
-              {statusLabels[status]}
+              {statusLabelsToUse[status]}
             </Badge>
           </div>
         </div>
@@ -909,31 +1022,35 @@ function EnhancedBookCard({
                 disabled={isUpdating}
               >
                 <Edit className="h-4 w-4 mr-2" />
-                Status
+                {dictionary ? dictionary.library.status : "Status"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              {Object.entries(statusOptions).map(([status, option]) => (
-                <DropdownMenuItem
-                  key={status}
-                  onClick={() =>
-                    onStatusChange(userBook, status as UserBook["status"])
-                  }
-                  className="flex items-center gap-2"
-                >
-                  <div className={`w-2 h-2 rounded-full ${option.color}`} />
-                  {option.label}
-                  {status === userBook.status && (
-                    <Check className="h-4 w-4 ml-auto" />
-                  )}
-                </DropdownMenuItem>
-              ))}
+              {Object.entries(localizedStatusOptions).map(
+                ([status, option]) => (
+                  <DropdownMenuItem
+                    key={status}
+                    onClick={() =>
+                      onStatusChange(userBook, status as UserBook["status"])
+                    }
+                    className="flex items-center gap-2"
+                  >
+                    <div className={`w-2 h-2 rounded-full ${option.color}`} />
+                    {option.label}
+                    {status === userBook.status && (
+                      <Check className="h-4 w-4 ml-auto" />
+                    )}
+                  </DropdownMenuItem>
+                )
+              )}
               <DropdownMenuItem
                 onClick={() => onOpenUpdateModal(userBook)}
                 className="border-t mt-1 pt-1"
               >
                 <Edit className="h-4 w-4 mr-2" />
-                Update Progress
+                {dictionary
+                  ? dictionary.currentlyReading.updateProgress
+                  : "Update Progress"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

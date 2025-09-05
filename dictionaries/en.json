@@ -60,6 +60,60 @@
     "subtitle": "Manage your personal book library",
     "searchBooks": "Search Books"
   },
+  "library": {
+    "title": "My Library",
+    "subtitle": "Manage your personal book collection",
+    "loading": "Loading your library...",
+    "loadingDescription": "Please wait while we fetch your books",
+    "searchPlaceholder": "Search books...",
+    "bookCount": "{count} {count, plural, one {book} other {books}} in your collection",
+    "filterByStatus": "Filter by status:",
+    "allBooks": "All Books ({count})",
+    "noBooks": "Your library is empty",
+    "noBooksDescription": "Start by searching for books to add to your collection.",
+    "noFilterResults": "No books found with status \"{status}\"",
+    "noSearchResults": "No books found for \"{query}\"",
+    "adjustFilters": "Try adjusting your filters or search terms.",
+    "removeSuccess": "\"{title}\" has been removed from your library.",
+    "removeFailed": "Failed to remove book. Please try again.",
+    "progressUpdated": "Progress updated to page {page}",
+    "progressFailed": "Failed to update progress. Please try again.",
+    "statusUpdated": "Book status updated to \"{status}\"",
+    "statusFailed": "Failed to update status. Please try again.",
+    "updateSuccess": "Progress updated successfully!",
+    "updateFailed": "Failed to update progress. Please try again.",
+    "updateStatus": "Update Status",
+    "status": "Status"
+  },
+  "readingStatus": {
+    "wantToRead": "Want to Read",
+    "reading": "Currently Reading",
+    "finished": "Finished",
+    "paused": "Paused",
+    "dnf": "Did Not Finish"
+  },
+  "currentlyReading": {
+    "title": "Currently Reading",
+    "subtitle": "Your active reading list",
+    "booksInProgress": "{count} {count, plural, one {book} other {books}} in progress",
+    "noBooks": "No books currently reading",
+    "noBooksDescription": "Start reading a book to see it here.",
+    "reading": "Reading",
+    "startedOn": "Started {date}",
+    "updateProgress": "Update Reading Progress",
+    "currentPage": "Current Page",
+    "pageProgress": "{current}/{total}",
+    "cancel": "Cancel",
+    "update": "Update",
+    "updating": "Updating..."
+  },
+  "libraryStats": {
+    "totalBooks": "Total Books",
+    "reading": "Reading",
+    "finished": "Finished",
+    "favorites": "Favorites",
+    "pagesRead": "Pages Read"
+  },
   "meta": {
     "title": "BookMory - Your Personal Library",
     "description": "Manage your personal book library with reading progress tracking"

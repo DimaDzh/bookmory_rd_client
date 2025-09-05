@@ -60,6 +60,60 @@
     "subtitle": "Керуйте своєю особистою бібліотекою книг",
     "searchBooks": "Пошук книг"
   },
+  "library": {
+    "title": "Моя бібліотека",
+    "subtitle": "Керуйте своєю особистою колекцією книг",
+    "loading": "Завантаження вашої бібліотеки...",
+    "loadingDescription": "Зачекайте, поки ми завантажимо ваші книги",
+    "searchPlaceholder": "Шукати книги...",
+    "bookCount": "{count} {count, plural, one {книга} few {книги} other {книг}} у вашій колекції",
+    "filterByStatus": "Фільтрувати за статусом:",
+    "allBooks": "Всі книги ({count})",
+    "noBooks": "Ваша бібліотека порожня",
+    "noBooksDescription": "Почніть з пошуку книг, щоб додати їх до своєї колекції.",
+    "noFilterResults": "Не знайдено книг зі статусом \"{status}\"",
+    "noSearchResults": "Не знайдено книг для \"{query}\"",
+    "adjustFilters": "Спробуйте змінити фільтри або пошукові терміни.",
+    "removeSuccess": "\"{title}\" видалено з вашої бібліотеки.",
+    "removeFailed": "Не вдалося видалити книгу. Спробуйте ще раз.",
+    "progressUpdated": "Прогрес оновлено до сторінки {page}",
+    "progressFailed": "Не вдалося оновити прогрес. Спробуйте ще раз.",
+    "statusUpdated": "Статус книги оновлено на \"{status}\"",
+    "statusFailed": "Не вдалося оновити статус. Спробуйте ще раз.",
+    "updateSuccess": "Прогрес успішно оновлено!",
+    "updateFailed": "Не вдалося оновити прогрес. Спробуйте ще раз.",
+    "updateStatus": "Оновити статус",
+    "status": "Статус"
+  },
+  "readingStatus": {
+    "wantToRead": "Хочу прочитати",
+    "reading": "Читаю зараз",
+    "finished": "Прочитано",
+    "paused": "Призупинено",
+    "dnf": "Не дочитав"
+  },
+  "currentlyReading": {
+    "title": "Читаю зараз",
+    "subtitle": "Ваш активний список для читання",
+    "booksInProgress": "{count} {count, plural, one {книга} few {книги} other {книг}} у процесі",
+    "noBooks": "Наразі не читаєте жодної книги",
+    "noBooksDescription": "Почніть читати книгу, щоб побачити її тут.",
+    "reading": "Читаю",
+    "startedOn": "Розпочато {date}",
+    "updateProgress": "Оновити прогрес читання",
+    "currentPage": "Поточна сторінка",
+    "pageProgress": "{current}/{total}",
+    "cancel": "Скасувати",
+    "update": "Оновити",
+    "updating": "Оновлення..."
+  },
+  "libraryStats": {
+    "totalBooks": "Всього книг",
+    "reading": "Читаю",
+    "finished": "Прочитано",
+    "favorites": "Улюблені",
+    "pagesRead": "Прочитано сторінок"
+  },
   "meta": {
     "title": "БукМорі - Ваша особиста бібліотека",
     "description": "Керуйте своєю особистою бібліотекою книг з відстеженням прогресу читання"

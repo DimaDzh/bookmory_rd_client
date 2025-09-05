@@ -29,13 +29,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import { UserBook } from "@/types/books";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Dictionary } from "@/lib/dictionaries";
+import { interpolate } from "@/lib/helpers";
 
 interface CurrentlyReadingCarouselProps {
   className?: string;
+  dictionary?: Dictionary;
 }
 
 export function CurrentlyReadingCarousel({
   className = "",
+  dictionary,
 }: CurrentlyReadingCarouselProps) {
   const { data: libraryResponse, isLoading: loading } =
     useBooksCurrentlyReading();
@@ -152,7 +156,10 @@ export function CurrentlyReadingCarousel({
         bookId: userBook.bookId,
         data: { currentPage: newPage },
       });
-      toast(`Progress updated to page ${newPage}`);
+      const message = dictionary
+        ? interpolate(dictionary.library.progressUpdated, { page: newPage })
+        : `Progress updated to page ${newPage}`;
+      toast(message);
     } catch (error) {
       // Revert optimistic updates on error
       queryClient.setQueryData(
@@ -165,7 +172,10 @@ export function CurrentlyReadingCarousel({
       );
 
       console.error("Failed to update progress:", error);
-      toast("Failed to update progress. Please try again.");
+      const errorMessage = dictionary
+        ? dictionary.library.progressFailed
+        : "Failed to update progress. Please try again.";
+      toast(errorMessage);
     }
   };
 
@@ -173,9 +183,15 @@ export function CurrentlyReadingCarousel({
     return (
       <div className={`${className}`}>
         <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-1">Currently Reading</h3>
+          <h3 className="text-lg font-semibold mb-1">
+            {dictionary
+              ? dictionary.currentlyReading.title
+              : "Currently Reading"}
+          </h3>
           <p className="text-sm text-muted-foreground">
-            Your active reading list
+            {dictionary
+              ? dictionary.currentlyReading.subtitle
+              : "Your active reading list"}
           </p>
         </div>
         <div className="flex gap-4">
@@ -199,16 +215,30 @@ export function CurrentlyReadingCarousel({
     return (
       <div className={`${className}`}>
         <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-1">Currently Reading</h3>
+          <h3 className="text-lg font-semibold mb-1">
+            {dictionary
+              ? dictionary.currentlyReading.title
+              : "Currently Reading"}
+          </h3>
           <p className="text-sm text-muted-foreground">
-            Your active reading list
+            {dictionary
+              ? dictionary.currentlyReading.subtitle
+              : "Your active reading list"}
           </p>
         </div>
         <Card className="p-8">
           <div className="text-center text-muted-foreground">
             <BookOpen className="h-12 w-12 mx-auto mb-4" />
-            <h4 className="font-medium mb-2">No books currently reading</h4>
-            <p className="text-sm">Start reading a book to see it here.</p>
+            <h4 className="font-medium mb-2">
+              {dictionary
+                ? dictionary.currentlyReading.noBooks
+                : "No books currently reading"}
+            </h4>
+            <p className="text-sm">
+              {dictionary
+                ? dictionary.currentlyReading.noBooksDescription
+                : "Start reading a book to see it here."}
+            </p>
           </div>
         </Card>
       </div>
@@ -219,9 +249,19 @@ export function CurrentlyReadingCarousel({
     <div className={`${className}`}>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold mb-1">Currently Reading</h3>
+          <h3 className="text-lg font-semibold mb-1">
+            {dictionary
+              ? dictionary.currentlyReading.title
+              : "Currently Reading"}
+          </h3>
           <p className="text-sm text-muted-foreground">
-            {books.length} book{books.length !== 1 ? "s" : ""} in progress
+            {dictionary
+              ? interpolate(dictionary.currentlyReading.booksInProgress, {
+                  count: books.length,
+                })
+              : `${books.length} book${
+                  books.length !== 1 ? "s" : ""
+                } in progress`}
           </p>
         </div>
 
@@ -280,6 +320,7 @@ export function CurrentlyReadingCarousel({
         <ProgressUpdateModal
           book={selectedBookForUpdate}
           onClose={handleCloseProgressModal}
+          dictionary={dictionary}
           onUpdate={async (newPage) => {
             // Calculate new progress percentage
             const newProgressPercentage = Math.round(
@@ -353,7 +394,12 @@ export function CurrentlyReadingCarousel({
                 bookId: selectedBookForUpdate.bookId,
                 data: { currentPage: newPage },
               });
-              toast(`Progress updated to page ${newPage}`);
+              const message = dictionary
+                ? interpolate(dictionary.library.progressUpdated, {
+                    page: newPage,
+                  })
+                : `Progress updated to page ${newPage}`;
+              toast(message);
               handleCloseProgressModal();
             } catch (error) {
               // Revert optimistic updates on error
@@ -367,7 +413,10 @@ export function CurrentlyReadingCarousel({
               );
 
               console.error("Failed to update progress:", error);
-              toast("Failed to update progress. Please try again.");
+              const errorMessage = dictionary
+                ? dictionary.library.progressFailed
+                : "Failed to update progress. Please try again.";
+              toast(errorMessage);
             }
           }}
         />
@@ -502,12 +551,14 @@ interface ProgressUpdateModalProps {
   book: UserBook;
   onClose: () => void;
   onUpdate: (newPage: number) => Promise<void>;
+  dictionary?: Dictionary;
 }
 
 function ProgressUpdateModal({
   book,
   onClose,
   onUpdate,
+  dictionary,
 }: ProgressUpdateModalProps) {
   const [newPage, setNewPage] = useState(book.currentPage.toString());
   const [isUpdating, setIsUpdating] = useState(false);
@@ -534,11 +585,19 @@ function ProgressUpdateModal({
     <Dialog open={true} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Update Reading Progress</DialogTitle>
+          <DialogTitle>
+            {dictionary
+              ? dictionary.currentlyReading.updateProgress
+              : "Update Reading Progress"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="page">Current Page</Label>
+            <Label htmlFor="page">
+              {dictionary
+                ? dictionary.currentlyReading.currentPage
+                : "Current Page"}
+            </Label>
             <div className="flex gap-2">
               <Input
                 id="page"
@@ -563,10 +622,16 @@ function ProgressUpdateModal({
               onClick={handleClose}
               className="flex-1"
             >
-              Cancel
+              {dictionary ? dictionary.currentlyReading.cancel : "Cancel"}
             </Button>
             <Button type="submit" disabled={isUpdating} className="flex-1">
-              {isUpdating ? "Updating..." : "Update"}
+              {isUpdating
+                ? dictionary
+                  ? dictionary.currentlyReading.updating
+                  : "Updating..."
+                : dictionary
+                ? dictionary.currentlyReading.update
+                : "Update"}
             </Button>
           </div>
         </form>
