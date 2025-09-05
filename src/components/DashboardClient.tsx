@@ -16,7 +16,7 @@ interface DashboardClientProps {
   dictionary: Dictionary;
 }
 
-export function DashboardClient({ dictionary }: DashboardClientProps) {
+export function DashboardClient({ locale, dictionary }: DashboardClientProps) {
   const { user } = useAuth();
   const searchModal = useOpenModal({ eventName: "openSearchModal" });
 
@@ -36,7 +36,7 @@ export function DashboardClient({ dictionary }: DashboardClientProps) {
               </span>
             </div>
             <div className="flex items-center">
-              <UserDropdown dictionary={dictionary} />
+              <UserDropdown dictionary={dictionary} locale={locale} />
             </div>
           </div>
         </div>

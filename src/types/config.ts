@@ -13,4 +13,6 @@ export interface Config {
   cookieOptions?: Partial<ResponseCookie>;
 }
 
-export type Params<T = {}> = Promise<{ locale: string } & T>;
+export type Params<T = Record<string, unknown>> = Promise<
+  { locale: string } & T
+>;

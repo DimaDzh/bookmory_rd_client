@@ -137,6 +137,11 @@
     "settings": "Налаштування",
     "logOut": "Вийти"
   },
+  "languageSelector": {
+    "language": "Мова",
+    "en": "English",
+    "uk": "Українська"
+  },
   "bookSearch": {
     "searchBooksTitle": "Пошук книг",
     "bookDetailsTitle": "Деталі книги",

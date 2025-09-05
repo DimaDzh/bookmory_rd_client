@@ -150,6 +150,11 @@ export type Dictionary = {
     settings: string;
     logOut: string;
   };
+  languageSelector: {
+    language: string;
+    en: string;
+    uk: string;
+  };
   bookSearch: {
     searchBooksTitle: string;
     bookDetailsTitle: string;

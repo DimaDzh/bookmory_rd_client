@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { RegisterRequest } from "@/types/auth";
 import { Dictionary } from "@/lib/dictionaries";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 interface RegisterFormProps {
   locale: string;
@@ -67,6 +68,14 @@ export function RegisterForm({ locale, dictionary }: RegisterFormProps) {
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSelector
+          currentLocale={locale}
+          dictionary={dictionary}
+          variant="minimal"
+          size="sm"
+        />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
