@@ -1,21 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { booksService } from "@/services/books";
 import { SearchParams, AddBookToLibrary, UpdateProgress } from "@/types/books";
 
-// Query Keys
-export const booksQueryKeys = {
+// Query Keys Factory - creates user-specific keys
+export const createBooksQueryKeys = (userId?: string) => ({
   all: ["books"] as const,
   search: (params: SearchParams) => ["books", "search", params] as const,
   bookById: (id: string) => ["books", "book", id] as const,
   userBooks: {
-    all: ["user-books"] as const,
+    all: ["user-books", userId] as const,
     list: (params?: Record<string, unknown>) =>
-      ["user-books", "list", params] as const,
-    stats: () => ["user-books", "stats"] as const,
-    detail: (bookId: string) => ["user-books", "detail", bookId] as const,
+      ["user-books", userId, "list", params] as const,
+    stats: () => ["user-books", userId, "stats"] as const,
+    detail: (bookId: string) =>
+      ["user-books", userId, "detail", bookId] as const,
   },
-};
+});
+
+// Legacy export for backward compatibility - but now user-aware
+export const booksQueryKeys = createBooksQueryKeys();
 
 // Search Books Query
 export function useSearchBooks(params: SearchParams, enabled = true) {
@@ -43,48 +48,64 @@ export function useUserLibrary(params?: {
   page?: number;
   limit?: number;
 }) {
+  const { user } = useAuth();
+  const queryKeys = createBooksQueryKeys(user?.id);
+
   return useQuery({
-    queryKey: booksQueryKeys.userBooks.list(params),
+    queryKey: queryKeys.userBooks.list(params),
     queryFn: () => booksService.getUserLibrary(params),
+    enabled: !!user, // Only run query if user is authenticated
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 
 // Get Library Stats Query
 export function useLibraryStats() {
+  const { user } = useAuth();
+  const queryKeys = createBooksQueryKeys(user?.id);
+
   return useQuery({
-    queryKey: booksQueryKeys.userBooks.stats(),
+    queryKey: queryKeys.userBooks.stats(),
     queryFn: () => booksService.getLibraryStats(),
+    enabled: !!user, // Only run query if user is authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
 // Get User Book Query
 export function useUserBook(bookId: string, enabled = true) {
+  const { user } = useAuth();
+  const queryKeys = createBooksQueryKeys(user?.id);
+
   return useQuery({
-    queryKey: booksQueryKeys.userBooks.detail(bookId),
+    queryKey: queryKeys.userBooks.detail(bookId),
     queryFn: () => booksService.getUserBook(bookId),
-    enabled: enabled && !!bookId,
+    enabled: enabled && !!bookId && !!user, // Only run query if user is authenticated
   });
 }
 
 // Add Book to Library Mutation
 export function useAddBookToLibrary() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: (data: AddBookToLibrary) => booksService.addBookToLibrary(data),
     onSuccess: (newBook) => {
-      // Invalidate and refetch user library queries
-      queryClient.invalidateQueries({
-        queryKey: booksQueryKeys.userBooks.all,
-      });
+      if (user) {
+        const queryKeys = createBooksQueryKeys(user.id);
 
-      // Optionally add the book to the cache
-      queryClient.setQueryData(
-        booksQueryKeys.userBooks.detail(newBook.bookId),
-        newBook
-      );
+        // Invalidate and refetch user library queries
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.userBooks.all,
+        });
+
+        // Optionally add the book to the cache
+        queryClient.setQueryData(
+          queryKeys.userBooks.detail(newBook.bookId),
+          newBook
+        );
+      }
     },
     meta: {
       successMessage: "Book added to your library successfully!",
@@ -95,24 +116,29 @@ export function useAddBookToLibrary() {
 // Update Progress Mutation
 export function useUpdateProgress() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: ({ bookId, data }: { bookId: string; data: UpdateProgress }) =>
       booksService.updateProgress(bookId, data),
     onSuccess: (updatedBook, variables) => {
-      // Update the specific book in cache
-      queryClient.setQueryData(
-        booksQueryKeys.userBooks.detail(variables.bookId),
-        updatedBook
-      );
+      if (user) {
+        const queryKeys = createBooksQueryKeys(user.id);
 
-      // Invalidate user library and stats
-      queryClient.invalidateQueries({
-        queryKey: booksQueryKeys.userBooks.list(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: booksQueryKeys.userBooks.stats(),
-      });
+        // Update the specific book in cache
+        queryClient.setQueryData(
+          queryKeys.userBooks.detail(variables.bookId),
+          updatedBook
+        );
+
+        // Invalidate user library and stats
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.userBooks.list(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.userBooks.stats(),
+        });
+      }
     },
     meta: {
       successMessage: "Progress updated successfully!",
@@ -123,19 +149,24 @@ export function useUpdateProgress() {
 // Remove Book from Library Mutation
 export function useRemoveBookFromLibrary() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: (bookId: string) => booksService.removeBookFromLibrary(bookId),
     onSuccess: (result, bookId) => {
-      // Remove the book from cache
-      queryClient.removeQueries({
-        queryKey: booksQueryKeys.userBooks.detail(bookId),
-      });
+      if (user) {
+        const queryKeys = createBooksQueryKeys(user.id);
 
-      // Invalidate user library and stats
-      queryClient.invalidateQueries({
-        queryKey: booksQueryKeys.userBooks.all,
-      });
+        // Remove the book from cache
+        queryClient.removeQueries({
+          queryKey: queryKeys.userBooks.detail(bookId),
+        });
+
+        // Invalidate user library and stats
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.userBooks.all,
+        });
+      }
     },
     meta: {
       successMessage: "Book removed from library successfully!",

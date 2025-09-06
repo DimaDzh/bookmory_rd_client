@@ -60,7 +60,8 @@ export default function QueryProvider({
             if (queryError?.response?.status === 401) {
               // Handle unauthorized errors globally
               toast.error("Session expired. Please login again.");
-              // You might want to redirect to login here
+              // Clear all cached data on authentication error
+              queryClient.clear();
             }
           },
         }),
@@ -69,11 +70,19 @@ export default function QueryProvider({
             // Global error handling for mutations
             console.error("Mutation error:", error);
             const mutationError = error as QueryError;
-            const errorMessage =
-              mutationError?.response?.data?.message ||
-              mutationError?.message ||
-              "An error occurred";
-            toast.error(errorMessage);
+
+            if (mutationError?.response?.status === 401) {
+              // Handle unauthorized errors globally
+              toast.error("Session expired. Please login again.");
+              // Clear all cached data on authentication error
+              queryClient.clear();
+            } else {
+              const errorMessage =
+                mutationError?.response?.data?.message ||
+                mutationError?.message ||
+                "An error occurred";
+              toast.error(errorMessage);
+            }
           },
           onSuccess: (
             data: unknown,

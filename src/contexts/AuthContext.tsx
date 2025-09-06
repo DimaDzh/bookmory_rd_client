@@ -2,11 +2,12 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { User, LoginRequest, RegisterRequest } from "@/types/auth";
 import { authApi } from "@/services/auth";
-import { getLocale, createLocalePath } from "@/lib/helpers";
+import { createLocalePath } from "@/lib/helpers";
 
 interface AuthContextType {
   user: User | null;
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const isAuthenticated = !!user;
 
@@ -44,13 +46,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
           console.error("Failed to get user profile:", error);
           Cookies.remove("auth_token");
+          // Clear cached data if authentication fails
+          queryClient.clear();
         }
+      } else {
+        // Clear cached data if no token exists
+        queryClient.clear();
       }
       setIsLoading(false);
     };
 
     checkAuth();
-  }, []);
+  }, [queryClient]);
 
   const login = async (credentials: LoginRequest) => {
     try {
@@ -63,6 +70,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
       });
+
+      // Clear all cached data before setting new user
+      queryClient.clear();
 
       setUser(response.user);
       toast.success("Login successful!");
@@ -94,6 +104,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sameSite: "strict",
       });
 
+      // Clear all cached data before setting new user
+      queryClient.clear();
+
       setUser(response.user);
       toast.success("Registration successful!");
 
@@ -115,6 +128,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     Cookies.remove("auth_token");
+
+    // Clear all cached data when user logs out
+    queryClient.clear();
+
     setUser(null);
     toast.success("Logged out successfully");
 

@@ -32,8 +32,9 @@ import {
   useLibraryStats,
   useRemoveBookFromLibrary,
   useUpdateProgress,
-  booksQueryKeys,
+  createBooksQueryKeys,
 } from "@/hooks/useBooks";
+import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserBook } from "@/types/books";
 import { ProgressUpdateModal } from "@/components/StatusSelector";
@@ -62,12 +63,16 @@ interface UserLibraryProps {
 }
 
 export default function UserLibrary({ dictionary }: UserLibraryProps) {
+  const { user } = useAuth();
   const [filter, setFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedBookForUpdate, setSelectedBookForUpdate] =
     useState<UserBook | null>(null);
   const { toast } = useToast();
+
+  // Create user-specific query keys
+  const queryKeys = createBooksQueryKeys(user?.id);
 
   // Helper function to interpolate strings
   const interpolate = (
@@ -125,33 +130,28 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
     newStatus: "WANT_TO_READ" | "READING" | "FINISHED" | "PAUSED" | "DNF"
   ) => {
     // Optimistic update - immediately update the UI
-    const previousData = queryClient.getQueryData(
-      booksQueryKeys.userBooks.list()
-    );
+    const previousData = queryClient.getQueryData(queryKeys.userBooks.list());
     const previousReadingData = queryClient.getQueryData(
-      booksQueryKeys.userBooks.list({ status: "READING" })
+      queryKeys.userBooks.list({ status: "READING" })
     );
 
     // Optimistically update the main library cache
-    queryClient.setQueryData(
-      booksQueryKeys.userBooks.list(),
-      (oldData: unknown) => {
-        if (!oldData || typeof oldData !== "object" || !("books" in oldData))
-          return oldData;
-        const data = oldData as { books: UserBook[] };
+    queryClient.setQueryData(queryKeys.userBooks.list(), (oldData: unknown) => {
+      if (!oldData || typeof oldData !== "object" || !("books" in oldData))
+        return oldData;
+      const data = oldData as { books: UserBook[] };
 
-        return {
-          ...data,
-          books: data.books.map((book: UserBook) =>
-            book.id === userBook.id ? { ...book, status: newStatus } : book
-          ),
-        };
-      }
-    );
+      return {
+        ...data,
+        books: data.books.map((book: UserBook) =>
+          book.id === userBook.id ? { ...book, status: newStatus } : book
+        ),
+      };
+    });
 
     // Update Currently Reading filtered cache
     queryClient.setQueryData(
-      booksQueryKeys.userBooks.list({ status: "READING" }),
+      queryKeys.userBooks.list({ status: "READING" }),
       (oldData: unknown) => {
         if (!oldData || typeof oldData !== "object" || !("books" in oldData))
           return oldData;
@@ -188,7 +188,7 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
 
     // Also update stats cache optimistically
     queryClient.setQueryData(
-      booksQueryKeys.userBooks.stats(),
+      queryKeys.userBooks.stats(),
       (oldStats: unknown) => {
         if (!oldStats || typeof oldStats !== "object") return oldStats;
 
@@ -231,13 +231,13 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
       toast(message);
     } catch (error) {
       // Revert optimistic update on error
-      queryClient.setQueryData(booksQueryKeys.userBooks.list(), previousData);
+      queryClient.setQueryData(queryKeys.userBooks.list(), previousData);
       queryClient.setQueryData(
-        booksQueryKeys.userBooks.list({ status: "READING" }),
+        queryKeys.userBooks.list({ status: "READING" }),
         previousReadingData
       );
       queryClient.invalidateQueries({
-        queryKey: booksQueryKeys.userBooks.stats(),
+        queryKey: queryKeys.userBooks.stats(),
       });
 
       console.error("Failed to update status:", error);
@@ -259,11 +259,9 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
     if (!selectedBookForUpdate) return;
 
     // Optimistic update for progress
-    const previousData = queryClient.getQueryData(
-      booksQueryKeys.userBooks.list()
-    );
+    const previousData = queryClient.getQueryData(queryKeys.userBooks.list());
     const previousReadingData = queryClient.getQueryData(
-      booksQueryKeys.userBooks.list({ status: "READING" })
+      queryKeys.userBooks.list({ status: "READING" })
     );
 
     // Calculate new progress percentage if currentPage is provided
@@ -275,37 +273,34 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
         : undefined;
 
     // Optimistically update the main library book data
-    queryClient.setQueryData(
-      booksQueryKeys.userBooks.list(),
-      (oldData: unknown) => {
-        if (!oldData || typeof oldData !== "object" || !("books" in oldData))
-          return oldData;
-        const libraryData = oldData as { books: UserBook[] };
+    queryClient.setQueryData(queryKeys.userBooks.list(), (oldData: unknown) => {
+      if (!oldData || typeof oldData !== "object" || !("books" in oldData))
+        return oldData;
+      const libraryData = oldData as { books: UserBook[] };
 
-        return {
-          ...libraryData,
-          books: libraryData.books.map((book: UserBook) =>
-            book.id === selectedBookForUpdate.id
-              ? {
-                  ...book,
-                  ...(data.status && { status: data.status }),
-                  ...(data.currentPage !== undefined && {
-                    currentPage: data.currentPage,
-                  }),
-                  ...(newProgressPercentage !== undefined && {
-                    progressPercentage: newProgressPercentage,
-                  }),
-                }
-              : book
-          ),
-        };
-      }
-    );
+      return {
+        ...libraryData,
+        books: libraryData.books.map((book: UserBook) =>
+          book.id === selectedBookForUpdate.id
+            ? {
+                ...book,
+                ...(data.status && { status: data.status }),
+                ...(data.currentPage !== undefined && {
+                  currentPage: data.currentPage,
+                }),
+                ...(newProgressPercentage !== undefined && {
+                  progressPercentage: newProgressPercentage,
+                }),
+              }
+            : book
+        ),
+      };
+    });
 
     // Update Currently Reading filtered cache if status is changing
     if (data.status && data.status !== selectedBookForUpdate.status) {
       queryClient.setQueryData(
-        booksQueryKeys.userBooks.list({ status: "READING" }),
+        queryKeys.userBooks.list({ status: "READING" }),
         (oldData: unknown) => {
           if (!oldData || typeof oldData !== "object" || !("books" in oldData))
             return oldData;
@@ -364,7 +359,7 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
     ) {
       // Update progress for existing currently reading book
       queryClient.setQueryData(
-        booksQueryKeys.userBooks.list({ status: "READING" }),
+        queryKeys.userBooks.list({ status: "READING" }),
         (oldData: unknown) => {
           if (!oldData || typeof oldData !== "object" || !("books" in oldData))
             return oldData;
@@ -393,7 +388,7 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
     // Update stats if status changed
     if (data.status && data.status !== selectedBookForUpdate.status) {
       queryClient.setQueryData(
-        booksQueryKeys.userBooks.stats(),
+        queryKeys.userBooks.stats(),
         (oldStats: unknown) => {
           if (!oldStats || typeof oldStats !== "object") return oldStats;
 
@@ -437,14 +432,14 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
       setSelectedBookForUpdate(null);
     } catch (error) {
       // Revert optimistic update on error
-      queryClient.setQueryData(booksQueryKeys.userBooks.list(), previousData);
+      queryClient.setQueryData(queryKeys.userBooks.list(), previousData);
       queryClient.setQueryData(
-        booksQueryKeys.userBooks.list({ status: "READING" }),
+        queryKeys.userBooks.list({ status: "READING" }),
         previousReadingData
       );
       if (data.status) {
         queryClient.invalidateQueries({
-          queryKey: booksQueryKeys.userBooks.stats(),
+          queryKey: queryKeys.userBooks.stats(),
         });
       }
 

@@ -13,8 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   useBooksCurrentlyReading,
   useUpdateProgress,
-  booksQueryKeys,
+  createBooksQueryKeys,
 } from "@/hooks/useBooks";
+import { useAuth } from "@/contexts/AuthContext";
 import { UserBook } from "@/types/books";
 import { Dictionary } from "@/lib/dictionaries";
 import { interpolate } from "@/lib/helpers";
@@ -76,6 +77,7 @@ export function CurrentlyReadingProvider({
   children,
   dictionary,
 }: CurrentlyReadingProviderProps) {
+  const { user } = useAuth();
   const { data: libraryResponse, isLoading: loading } =
     useBooksCurrentlyReading();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -91,6 +93,9 @@ export function CurrentlyReadingProvider({
   const updateProgressMutation = useUpdateProgress();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Create user-specific query keys
+  const queryKeys = createBooksQueryKeys(user?.id);
 
   // Memoize raw books to prevent dependency issues
   const rawBooks = useMemo(
@@ -168,15 +173,15 @@ export function CurrentlyReadingProvider({
 
       // Optimistic update - immediately update the UI
       const previousReadingData = queryClient.getQueryData(
-        booksQueryKeys.userBooks.list({ status: "READING" })
+        queryKeys.userBooks.list({ status: "READING" })
       );
       const previousMainData = queryClient.getQueryData(
-        booksQueryKeys.userBooks.list()
+        queryKeys.userBooks.list()
       );
 
       // Update Currently Reading cache
       queryClient.setQueryData(
-        booksQueryKeys.userBooks.list({ status: "READING" }),
+        queryKeys.userBooks.list({ status: "READING" }),
         (oldData: unknown) => {
           if (!oldData || typeof oldData !== "object" || !("books" in oldData))
             return oldData;
@@ -199,7 +204,7 @@ export function CurrentlyReadingProvider({
 
       // Update main library cache
       queryClient.setQueryData(
-        booksQueryKeys.userBooks.list(),
+        queryKeys.userBooks.list(),
         (oldData: unknown) => {
           if (!oldData || typeof oldData !== "object" || !("books" in oldData))
             return oldData;
@@ -235,13 +240,10 @@ export function CurrentlyReadingProvider({
       } catch (error) {
         // Revert optimistic updates on error
         queryClient.setQueryData(
-          booksQueryKeys.userBooks.list({ status: "READING" }),
+          queryKeys.userBooks.list({ status: "READING" }),
           previousReadingData
         );
-        queryClient.setQueryData(
-          booksQueryKeys.userBooks.list(),
-          previousMainData
-        );
+        queryClient.setQueryData(queryKeys.userBooks.list(), previousMainData);
 
         console.error("Failed to update progress:", error);
         const errorMessage = dictionary
@@ -251,7 +253,13 @@ export function CurrentlyReadingProvider({
         throw error;
       }
     },
-    [queryClient, updateProgressMutation, dictionary, toast]
+    [
+      queryClient,
+      updateProgressMutation,
+      dictionary,
+      toast,
+      queryKeys.userBooks,
+    ]
   );
 
   // Debounce refs for accumulating progress updates
