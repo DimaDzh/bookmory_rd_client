@@ -40,8 +40,6 @@ import { UserBook } from "@/types/books";
 import { ProgressUpdateModal } from "@/components/StatusSelector";
 import { Dictionary } from "@/lib/dictionaries";
 
-// Status colors and labels for badges
-
 const statusColors = {
   WANT_TO_READ: "bg-gray-100 text-gray-800",
   READING: "bg-blue-100 text-blue-800",
@@ -71,10 +69,8 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
     useState<UserBook | null>(null);
   const { toast } = useToast();
 
-  // Create user-specific query keys
   const queryKeys = createBooksQueryKeys(user?.id);
 
-  // Helper function to interpolate strings
   const interpolate = (
     template: string,
     values: Record<string, string | number>
@@ -84,7 +80,6 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
     });
   };
 
-  // Get localized status labels
   const getStatusLabels = () => {
     if (!dictionary) return statusLabels;
 
@@ -99,7 +94,6 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
 
   const localizedStatusLabels = getStatusLabels();
 
-  // Use TanStack Query hooks
   const queryClient = useQueryClient();
   const { data: libraryData, isLoading: booksLoading } = useUserLibrary();
   const { data: stats, isLoading: statsLoading } = useLibraryStats();
@@ -135,7 +129,6 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
       queryKeys.userBooks.list({ status: "READING" })
     );
 
-    // Optimistically update the main library cache
     queryClient.setQueryData(queryKeys.userBooks.list(), (oldData: unknown) => {
       if (!oldData || typeof oldData !== "object" || !("books" in oldData))
         return oldData;
@@ -149,7 +142,6 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
       };
     });
 
-    // Update Currently Reading filtered cache
     queryClient.setQueryData(
       queryKeys.userBooks.list({ status: "READING" }),
       (oldData: unknown) => {
@@ -158,7 +150,6 @@ export default function UserLibrary({ dictionary }: UserLibraryProps) {
         const data = oldData as { books: UserBook[] };
 
         if (newStatus === "READING" && userBook.status !== "READING") {
-          // Adding book to currently reading
           const updatedUserBook = { ...userBook, status: newStatus };
           return {
             ...data,
