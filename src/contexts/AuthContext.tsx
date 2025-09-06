@@ -3,11 +3,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { User, LoginRequest, RegisterRequest } from "@/types/auth";
 import { authApi } from "@/services/auth";
 import { createLocalePath } from "@/lib/helpers";
+import cookieManager from "@/lib/cookies";
 
 interface AuthContextType {
   user: User | null;
@@ -38,18 +38,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = Cookies.get("auth_token");
+      const token = cookieManager.get("auth_token");
+      console.log("Checking auth, token:", token ? "exists" : "not found");
+
       if (token) {
         try {
           const userData = await authApi.getProfile();
           setUser(userData);
+          console.log("Auth check successful, user:", userData.email);
         } catch (error) {
           console.error("Failed to get user profile:", error);
-          Cookies.remove("auth_token");
+          cookieManager.remove("auth_token");
           // Clear cached data if authentication fails
           queryClient.clear();
         }
       } else {
+        console.log("No token found, clearing user data");
         // Clear cached data if no token exists
         queryClient.clear();
       }
@@ -57,6 +61,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     checkAuth();
+
+    // Add event listeners for visibility and focus changes to re-check auth
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkAuth();
+      }
+    };
+
+    const handleFocus = () => {
+      checkAuth();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    // Cleanup event listeners
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [queryClient]);
 
   const login = async (credentials: LoginRequest) => {
@@ -64,12 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       const response = await authApi.login(credentials);
 
-      // Store token
-      Cookies.set("auth_token", response.access_token, {
-        expires: 7, // 7 days
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
+      // Store token with enhanced persistence
+      cookieManager.set("auth_token", response.access_token);
 
       // Clear all cached data before setting new user
       queryClient.clear();
@@ -97,12 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       const response = await authApi.register(userData);
 
-      // Store token
-      Cookies.set("auth_token", response.access_token, {
-        expires: 7, // 7 days
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
+      // Store token with enhanced persistence
+      cookieManager.set("auth_token", response.access_token);
 
       // Clear all cached data before setting new user
       queryClient.clear();
@@ -127,7 +143,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    Cookies.remove("auth_token");
+    // Remove cookie with proper cleanup
+    cookieManager.remove("auth_token");
 
     // Clear all cached data when user logs out
     queryClient.clear();
