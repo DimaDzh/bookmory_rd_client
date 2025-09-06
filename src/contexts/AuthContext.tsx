@@ -51,11 +51,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           cookieManager.remove("auth_token");
           // Clear cached data if authentication fails
           queryClient.clear();
+          setUser(null);
+
+          // Redirect to login if token is invalid and we're on a protected route
+          const currentPath = window.location.pathname;
+          const protectedRoutes = ["/dashboard", "/library", "/profile"];
+          const isProtectedRoute = protectedRoutes.some((route) =>
+            currentPath.includes(route)
+          );
+
+          if (isProtectedRoute) {
+            const loginPath = createLocalePath("login");
+            router.push(
+              `${loginPath}?redirect=${encodeURIComponent(currentPath)}`
+            );
+          }
         }
       } else {
         console.log("No token found, clearing user data");
         // Clear cached data if no token exists
         queryClient.clear();
+        setUser(null);
       }
       setIsLoading(false);
     };
@@ -81,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [queryClient]);
+  }, [queryClient, router]);
 
   const login = async (credentials: LoginRequest) => {
     try {
@@ -97,9 +113,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(response.user);
       toast.success("Login successful!");
 
-      // Navigate to dashboard with current locale
-      const dashboardPath = createLocalePath("dashboard");
-      router.push(dashboardPath);
+      // Check if there's a redirect parameter in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectPath = urlParams.get("redirect");
+
+      if (redirectPath) {
+        // Navigate to the original intended page
+        router.push(redirectPath);
+      } else {
+        // Navigate to dashboard with current locale
+        const dashboardPath = createLocalePath("dashboard");
+        router.push(dashboardPath);
+      }
     } catch (error: unknown) {
       const apiError = error as {
         response?: { data?: { message?: string | string[] } };
