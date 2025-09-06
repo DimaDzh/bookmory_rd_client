@@ -3,6 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { createLocalePath } from "@/lib/helpers";
 
 export default function HomePage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -11,9 +12,11 @@ export default function HomePage() {
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        router.push("/en/dashboard");
+        const dashboardPath = createLocalePath("dashboard");
+        router.push(dashboardPath);
       } else {
-        router.push("/en/login");
+        const loginPath = createLocalePath("login");
+        router.push(loginPath);
       }
     }
   }, [isAuthenticated, isLoading, router]);

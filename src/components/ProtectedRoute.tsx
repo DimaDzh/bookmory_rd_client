@@ -3,6 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { createLocalePath } from "@/lib/helpers";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,9 +20,11 @@ export function ProtectedRoute({
   useEffect(() => {
     if (!isLoading) {
       if (requireAuth && !isAuthenticated) {
-        router.push("/login");
+        const loginPath = createLocalePath("login");
+        router.push(loginPath);
       } else if (!requireAuth && isAuthenticated) {
-        router.push("/dashboard");
+        const dashboardPath = createLocalePath("dashboard");
+        router.push(dashboardPath);
       }
     }
   }, [isAuthenticated, isLoading, requireAuth, router]);

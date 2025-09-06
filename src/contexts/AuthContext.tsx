@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { User, LoginRequest, RegisterRequest } from "@/types/auth";
 import { authApi } from "@/services/auth";
+import { getLocale, createLocalePath } from "@/lib/helpers";
 
 interface AuthContextType {
   user: User | null;
@@ -65,7 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(response.user);
       toast.success("Login successful!");
-      router.push("/dashboard");
+
+      // Navigate to dashboard with current locale
+      const dashboardPath = createLocalePath("dashboard");
+      router.push(dashboardPath);
     } catch (error: unknown) {
       const apiError = error as {
         response?: { data?: { message?: string | string[] } };
@@ -92,7 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(response.user);
       toast.success("Registration successful!");
-      router.push("/dashboard");
+
+      // Navigate to dashboard with current locale
+      const dashboardPath = createLocalePath("dashboard");
+      router.push(dashboardPath);
     } catch (error: unknown) {
       const apiError = error as {
         response?: { data?: { message?: string | string[] } };
@@ -110,7 +117,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     Cookies.remove("auth_token");
     setUser(null);
     toast.success("Logged out successfully");
-    router.push("/login");
+
+    // Navigate to login with current locale
+    const loginPath = createLocalePath("login");
+    router.push(loginPath);
   };
 
   return (
